@@ -14,7 +14,7 @@ export const COLORS = {
   errorBg: '#FEE2E2',
   selected: '#DBEAFE',
   related: '#EFF6FF',
-  highlight: '#FEF3C7',
+  highlight: '#96beffff',
   border: '#334155',
   borderLight: '#E2E8F0',
   boxBorder: '#334155',

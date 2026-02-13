@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useRef,
   useCallback,
+  useState,
 } from 'react';
 import { BoxSize, Difficulty, generatePuzzle, getValidCandidates, isValidPlacement } from '../utils/sudoku';
 import { saveRecord, GameRecord } from '../utils/storage';
@@ -32,7 +33,6 @@ export interface GameState {
   solution: number[][];
   selectedCell: [number, number] | null;
   pencilMode: boolean;
-  timer: number;
   isPaused: boolean;
   isComplete: boolean;
   isGameOver: boolean;
@@ -52,7 +52,6 @@ type GameAction =
   | { type: 'UNDO' }
   | { type: 'RESTART' }
   | { type: 'TOGGLE_PAUSE' }
-  | { type: 'TICK' }
   | { type: 'AUTO_PENCIL' };
 
 const initialState: GameState = {
@@ -62,7 +61,6 @@ const initialState: GameState = {
   solution: [],
   selectedCell: null,
   pencilMode: false,
-  timer: 0,
   isPaused: false,
   isComplete: false,
   isGameOver: false,
@@ -282,7 +280,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         grid: newGrid,
         selectedCell: null,
         pencilMode: false,
-        timer: 0,
         isPaused: false,
         isComplete: false,
         isGameOver: false,
@@ -315,12 +312,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
 
-    case 'TICK': {
-      if (state.isPaused || state.isComplete || state.isGameOver || !state.gameStarted)
-        return state;
-      return { ...state, timer: state.timer + 1 };
-    }
-
     default:
       return state;
   }
@@ -328,6 +319,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
 interface GameContextType {
   state: GameState;
+  timer: number;
+  setTimer: (timer: number) => void;
   startGame: (boxSize: BoxSize, difficulty: Difficulty, journeyLevel?: number) => void;
   selectCell: (row: number, col: number) => void;
   inputNumber: (num: number) => void;
@@ -343,25 +336,26 @@ const GameContext = createContext<GameContextType | null>(null);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [tick, setTick] = useState(0);
+  // const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    if (state.gameStarted && !state.isPaused && !state.isComplete && !state.isGameOver) {
-      timerRef.current = setInterval(() => {
-        dispatch({ type: 'TICK' });
-      }, 1000);
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [state.gameStarted, state.isPaused, state.isComplete, state.isGameOver]);
+  // useEffect(() => {
+  //   if (state.gameStarted && !state.isPaused && !state.isComplete && !state.isGameOver) {
+  //     timerRef.current = setInterval(() => {
+  //       setTick((prev) => prev + 1);
+  //     }, 1000);
+  //   } else {
+  //     if (timerRef.current) {
+  //       clearInterval(timerRef.current);
+  //       timerRef.current = null;
+  //     }
+  //   }
+  //   return () => {
+  //     if (timerRef.current) {
+  //       clearInterval(timerRef.current);
+  //     }
+  //   };
+  // }, [state.gameStarted, state.isPaused, state.isComplete, state.isGameOver]);
 
   // Save record when game completes or game over
   const prevCompleteRef = useRef(false);
@@ -374,7 +368,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         date: new Date().toISOString(),
         boxSize: state.boxSize,
         difficulty: state.difficulty,
-        time: state.timer,
+        time: tick,
         mistakes: state.mistakes,
         completed: state.isComplete,
       };
@@ -391,10 +385,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const startGame = useCallback(
     (boxSize: BoxSize, difficulty: Difficulty, journeyLevel?: number) => {
+      setTick(0);
       dispatch({ type: 'START_GAME', boxSize, difficulty, journeyLevel });
     },
     []
   );
+
+  const setTimer = useCallback((timer: number) => {
+    setTick(timer);
+  }, []);
 
   const selectCell = useCallback((row: number, col: number) => {
     dispatch({ type: 'SELECT_CELL', row, col });
@@ -417,6 +416,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const restart = useCallback(() => {
+    setTick(0);
     dispatch({ type: 'RESTART' });
   }, []);
 
@@ -432,6 +432,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     <GameContext.Provider
       value={{
         state,
+        timer: tick,
+        setTimer,
         startGame,
         selectCell,
         inputNumber,

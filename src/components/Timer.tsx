@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useGame } from '../context/GameContext';
@@ -11,12 +11,33 @@ function formatTime(seconds: number): string {
 }
 
 export default function Timer() {
-  const { state, togglePause } = useGame();
+  const { state, togglePause, setTimer } = useGame();
+  const [tick, setTick] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (state.gameStarted && !state.isPaused && !state.isComplete && !state.isGameOver) {
+      timerRef.current = setInterval(() => {
+        setTick((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        setTimer(tick);
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [state.gameStarted, state.isPaused, state.isComplete, state.isGameOver]);
 
   return (
     <View style={styles.container}>
       <Ionicons name="time-outline" size={18} color={COLORS.textSecondary} />
-      <Text style={styles.timeText}>{formatTime(state.timer)}</Text>
+      <Text style={styles.timeText}>{formatTime(tick)}</Text>
       <TouchableOpacity
         onPress={togglePause}
         style={styles.pauseBtn}

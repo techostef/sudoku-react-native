@@ -11,13 +11,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useGame } from '../context/GameContext';
 import { COLORS } from '../constants/theme';
 
-export default function NumberPad() {
+const NumberPad = () => {
   const { state, inputNumber, togglePencil, erase, undo, autoPencil } = useGame();
   const { width: windowWidth } = useWindowDimensions();
   const gridSize = state.boxSize * state.boxSize;
 
   const maxPadWidth = Platform.OS === 'web'
-    ? Math.min(windowWidth * 0.9, 560)
+    ? Math.min(windowWidth - 10, 560)
     : windowWidth - 24;
 
   const cols = state.boxSize <= 3 ? gridSize : state.boxSize;
@@ -44,7 +44,7 @@ export default function NumberPad() {
                     {
                       width: btnSize,
                       height: btnSize,
-                      borderRadius: btnSize / 2,
+                      borderRadius: 8,
                     },
                     remaining === 0 && styles.numberBtnDisabled,
                   ]}
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   numberRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 6,
+    gap: 3,
   },
   numberBtn: {
     backgroundColor: COLORS.surface,
@@ -210,3 +210,5 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 });
+
+export default React.memo(NumberPad);

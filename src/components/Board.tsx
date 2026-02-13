@@ -16,6 +16,7 @@ const Cell = React.memo(function Cell({
   col,
   cellSize,
   boxSize,
+  selectedValue,
   isSelected,
   isRelated,
   isSameValue,
@@ -27,6 +28,7 @@ const Cell = React.memo(function Cell({
   col: number;
   cellSize: number;
   boxSize: number;
+  selectedValue: number;
   isSelected: boolean;
   isRelated: boolean;
   isSameValue: boolean;
@@ -100,7 +102,10 @@ const Cell = React.memo(function Cell({
                   style={{
                     fontSize: noteFontSize,
                     color: COLORS.noteText,
+                    width: noteFontSize,
+                    textAlign: 'center',  
                     fontWeight: '500',
+                    backgroundColor: selectedValue === n ? COLORS.highlight : 'transparent',
                   }}
                 >
                   {n}
@@ -180,6 +185,7 @@ export default function Board() {
                 col={cIdx}
                 cellSize={cellSize}
                 boxSize={boxSize}
+                selectedValue={selectedValue}
                 isSelected={isSelected}
                 isRelated={isRelated}
                 isSameValue={isSameValue}
