@@ -18,7 +18,7 @@ const NumberPad = () => {
 
   const maxPadWidth = Platform.OS === 'web'
     ? Math.min(windowWidth - 10, 560)
-    : windowWidth - 24;
+    : windowWidth + 10;
 
   const cols = state.boxSize <= 3 ? gridSize : state.boxSize;
   const btnSize = Math.min((maxPadWidth - cols * 6) / cols, 56);
@@ -43,7 +43,7 @@ const NumberPad = () => {
                     styles.numberBtn,
                     {
                       width: btnSize,
-                      height: btnSize,
+                      height: btnSize + 16,
                       borderRadius: 8,
                     },
                     remaining === 0 && styles.numberBtnDisabled,
@@ -56,7 +56,7 @@ const NumberPad = () => {
                     style={[
                       styles.numberText,
                       {
-                        fontSize: btnSize * 0.42,
+                        fontSize: btnSize * 0.6,
                       },
                       remaining === 0 && styles.numberTextDisabled,
                     ]}

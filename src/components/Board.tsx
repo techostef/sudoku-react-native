@@ -36,6 +36,8 @@ const Cell = React.memo(function Cell({
   onPress: () => void;
 }) {
   const gridSize = boxSize * boxSize;
+  const isLeftBoxBorder = col % boxSize === 0 && col % boxSize !== 0;
+  const isTopBoxBorder = row % boxSize === 0 && row % boxSize !== 0;
   const isRightBoxBorder = (col + 1) % boxSize === 0 && col < gridSize - 1;
   const isBottomBoxBorder = (row + 1) % boxSize === 0 && row < gridSize - 1;
 
@@ -58,9 +60,13 @@ const Cell = React.memo(function Cell({
           width: cellSize,
           height: cellSize,
           backgroundColor: bgColor,
+          borderLeftWidth: isLeftBoxBorder ? 2.5 : StyleSheet.hairlineWidth,
           borderRightWidth: isRightBoxBorder ? 2.5 : StyleSheet.hairlineWidth,
+          borderTopWidth: isTopBoxBorder ? 2.5 : StyleSheet.hairlineWidth,
           borderBottomWidth: isBottomBoxBorder ? 2.5 : StyleSheet.hairlineWidth,
+          borderLeftColor: isLeftBoxBorder ? COLORS.boxBorder : COLORS.border,
           borderRightColor: isRightBoxBorder ? COLORS.boxBorder : COLORS.border,
+          borderTopColor: isTopBoxBorder ? COLORS.boxBorder : COLORS.border,
           borderBottomColor: isBottomBoxBorder ? COLORS.boxBorder : COLORS.border,
         },
         isError && { backgroundColor: COLORS.errorBg },
