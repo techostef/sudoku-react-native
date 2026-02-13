@@ -15,7 +15,7 @@ export const COLORS = {
   selected: '#DBEAFE',
   related: '#EFF6FF',
   highlight: '#FEF3C7',
-  border: '#CBD5E1',
+  border: '#334155',
   borderLight: '#E2E8F0',
   boxBorder: '#334155',
   success: '#22C55E',

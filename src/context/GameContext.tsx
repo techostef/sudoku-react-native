@@ -177,9 +177,27 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         newMistakes++;
       }
 
-      // Lock the cell if correct
+      // Lock the cell if correct and clear pencil marks from related cells
       if (newValue !== 0 && newValue === cell.solution) {
         newGrid[row][col].isLocked = true;
+        const size = state.boxSize * state.boxSize;
+        const boxRowStart = Math.floor(row / state.boxSize) * state.boxSize;
+        const boxColStart = Math.floor(col / state.boxSize) * state.boxSize;
+        for (let i = 0; i < size; i++) {
+          // Same row
+          const ri = newGrid[row][i].notes.indexOf(newValue);
+          if (ri >= 0) newGrid[row][i].notes.splice(ri, 1);
+          // Same column
+          const ci = newGrid[i][col].notes.indexOf(newValue);
+          if (ci >= 0) newGrid[i][col].notes.splice(ci, 1);
+        }
+        // Same box
+        for (let r = boxRowStart; r < boxRowStart + state.boxSize; r++) {
+          for (let c = boxColStart; c < boxColStart + state.boxSize; c++) {
+            const bi = newGrid[r][c].notes.indexOf(newValue);
+            if (bi >= 0) newGrid[r][c].notes.splice(bi, 1);
+          }
+        }
       }
 
       const isGameOver = newMistakes >= state.maxMistakes;
