@@ -13,7 +13,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../src/context/GameContext';
-import { COLORS, SHADOWS, DIFFICULTY_COLORS } from '../src/constants/theme';
+import { SHADOWS, DIFFICULTY_COLORS } from '../src/constants/theme';
+import { useColors } from '../src/context/ThemeContext';
 import {
   JourneyProgress,
   JourneyLevel,
@@ -80,7 +81,7 @@ function getZoneColor(level: number): string {
   return zone?.color ?? DIFFICULTY_COLORS.extreme;
 }
 
-function renderStars(stars: number | undefined) {
+function renderStars(stars: number | undefined, mutedColor: string) {
   const s = stars ?? 0;
   return (
     <View style={styles.starsRow}>
@@ -89,7 +90,7 @@ function renderStars(stars: number | undefined) {
           key={i}
           name={i <= s ? 'star' : 'star-outline'}
           size={12}
-          color={i <= s ? '#FBBF24' : COLORS.textMuted}
+          color={i <= s ? '#FBBF24' : mutedColor}
         />
       ))}
     </View>
@@ -102,6 +103,7 @@ export default function JourneyScreen() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [randomDifficulty, setRandomDifficulty] = useState<Difficulty>('easy');
   const { startGame } = useGame();
+  const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -154,7 +156,7 @@ export default function JourneyScreen() {
   const zones = ALL_ZONES;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, isWide && styles.headerWide]}>
         <TouchableOpacity
@@ -162,34 +164,34 @@ export default function JourneyScreen() {
           onPress={() => router.back()}
           activeOpacity={0.6}
         >
-          <Ionicons name="arrow-back" size={22} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Journey</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Journey</Text>
         <TouchableOpacity
           style={styles.resetBtn}
           onPress={() => setShowResetModal(true)}
           activeOpacity={0.6}
         >
-          <Ionicons name="refresh-outline" size={20} color={COLORS.textMuted} />
+          <Ionicons name="refresh-outline" size={20} color={colors.textMuted} />
         </TouchableOpacity>
       </View>
 
       {/* Progress Summary */}
       <View style={[styles.summaryRow, isWide && styles.summaryRowWide]}>
-        <View style={styles.summaryCard}>
-          <Ionicons name="flag" size={18} color={COLORS.primary} />
-          <Text style={styles.summaryValue}>{completedCount}/{TOTAL_LEVELS}</Text>
-          <Text style={styles.summaryLabel}>Levels</Text>
+        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+          <Ionicons name="flag" size={18} color={colors.primary} />
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{completedCount}/{TOTAL_LEVELS}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Levels</Text>
         </View>
-        <View style={styles.summaryCard}>
+        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="star" size={18} color="#FBBF24" />
-          <Text style={styles.summaryValue}>{totalStars}/{maxStars}</Text>
-          <Text style={styles.summaryLabel}>Stars</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{totalStars}/{maxStars}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Stars</Text>
         </View>
-        <View style={styles.summaryCard}>
-          <Ionicons name="trophy" size={18} color={COLORS.success} />
-          <Text style={styles.summaryValue}>{getDifficultyLabel(completedCount + 1)}</Text>
-          <Text style={styles.summaryLabel}>Rank</Text>
+        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+          <Ionicons name="trophy" size={18} color={colors.success} />
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{getDifficultyLabel(completedCount + 1)}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Rank</Text>
         </View>
       </View>
 
@@ -211,9 +213,9 @@ export default function JourneyScreen() {
             <View key={zone.label} style={styles.zoneSection}>
               <View style={styles.zoneHeader}>
                 <View style={[styles.zoneDot, { backgroundColor: zone.color }]} />
-                <Text style={styles.zoneTitle}>{zone.label}</Text>
+                <Text style={[styles.zoneTitle, { color: colors.text }]}>{zone.label}</Text>
                 {allCompleted && (
-                  <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.success} />
                 )}
               </View>
               <View style={styles.levelGrid}>
@@ -230,29 +232,31 @@ export default function JourneyScreen() {
                         {
                           width: cellSize,
                           height: cellSize + 14,
+                          backgroundColor: colors.surface,
+                          borderColor: colors.borderLight,
                         },
-                        isCompleted && styles.levelCellCompleted,
-                        isCompleted && { borderColor: levelColor },
-                        !isUnlocked && styles.levelCellLocked,
+                        isCompleted && { backgroundColor: colors.successBg, borderColor: levelColor },
+                        !isUnlocked && { backgroundColor: colors.surfaceAlt, borderColor: 'transparent', opacity: 0.6 },
                       ]}
                       onPress={() => handleLevelPress(lvl)}
                       activeOpacity={isUnlocked ? 0.7 : 1}
                       disabled={!isUnlocked}
                     >
                       {!isUnlocked ? (
-                        <Ionicons name="lock-closed" size={20} color={COLORS.textMuted} />
+                        <Ionicons name="lock-closed" size={20} color={colors.textMuted} />
                       ) : (
                         <>
                           <Text
                             style={[
                               styles.levelNumber,
+                              { color: colors.text },
                               isCompleted && { color: levelColor },
                             ]}
                           >
                             {lvl.level}
                           </Text>
                           {isCompleted ? (
-                            renderStars(lvl.stars)
+                            renderStars(lvl.stars, colors.textMuted)
                           ) : (
                             <View style={[styles.playDot, { backgroundColor: levelColor }]} />
                           )}
@@ -276,17 +280,17 @@ export default function JourneyScreen() {
         onRequestClose={() => setSelectedLevel(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <View style={[styles.levelBadge, { backgroundColor: getZoneColor(selectedLevel?.level ?? 1) }]}>
               <Text style={styles.levelBadgeText}>Level {selectedLevel?.level}</Text>
             </View>
 
-            <Text style={styles.modalSubtitle}>
+            <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
               {getDifficultyLabel(selectedLevel?.level ?? 1)} Zone
             </Text>
 
-            <View style={styles.difficultyPreview}>
-              <Text style={styles.difficultyPreviewLabel}>Difficulty</Text>
+            <View style={[styles.difficultyPreview, { backgroundColor: colors.surfaceAlt }]}>
+              <Text style={[styles.difficultyPreviewLabel, { color: colors.textSecondary }]}>Difficulty</Text>
               <View style={[styles.difficultyPill, { backgroundColor: DIFFICULTY_COLORS[randomDifficulty] }]}>
                 <Text style={styles.difficultyPillText}>
                   {randomDifficulty.charAt(0).toUpperCase() + randomDifficulty.slice(1)}
@@ -294,34 +298,34 @@ export default function JourneyScreen() {
               </View>
             </View>
 
-            <Text style={styles.modalHint}>
+            <Text style={[styles.modalHint, { color: colors.textMuted }]}>
               Difficulty is randomly assigned based on your level progression
             </Text>
 
             <TouchableOpacity
-              style={styles.rerollBtn}
+              style={[styles.rerollBtn, { borderColor: colors.primary }]}
               onPress={handleReroll}
               activeOpacity={0.7}
             >
-              <Ionicons name="dice" size={18} color={COLORS.primary} />
-              <Text style={styles.rerollText}>Re-roll Difficulty</Text>
+              <Ionicons name="dice" size={18} color={colors.primary} />
+              <Text style={[styles.rerollText, { color: colors.primary }]}>Re-roll Difficulty</Text>
             </TouchableOpacity>
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalCancelBtn}
+                style={[styles.modalCancelBtn, { borderColor: colors.borderLight }]}
                 onPress={() => setSelectedLevel(null)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalPlayBtn, { backgroundColor: getZoneColor(selectedLevel?.level ?? 1) }]}
                 onPress={handlePlay}
                 activeOpacity={0.7}
               >
-                <Ionicons name="play" size={18} color={COLORS.white} />
-                <Text style={styles.modalPlayText}>Play</Text>
+                <Ionicons name="play" size={18} color={colors.white} />
+                <Text style={[styles.modalPlayText, { color: colors.white }]}>Play</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -336,26 +340,26 @@ export default function JourneyScreen() {
         onRequestClose={() => setShowResetModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Ionicons name="warning" size={48} color={COLORS.error} />
-            <Text style={styles.resetTitle}>Reset Journey?</Text>
-            <Text style={styles.resetDesc}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+            <Ionicons name="warning" size={48} color={colors.error} />
+            <Text style={[styles.resetTitle, { color: colors.text }]}>Reset Journey?</Text>
+            <Text style={[styles.resetDesc, { color: colors.textSecondary }]}>
               This will reset all your journey progress. All unlocked levels and stars will be lost.
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalCancelBtn}
+                style={[styles.modalCancelBtn, { borderColor: colors.borderLight }]}
                 onPress={() => setShowResetModal(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalResetConfirmBtn}
+                style={[styles.modalResetConfirmBtn, { backgroundColor: colors.error }]}
                 onPress={handleReset}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalPlayText}>Reset</Text>
+                <Text style={[styles.modalPlayText, { color: colors.white }]}>Reset</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -368,7 +372,6 @@ export default function JourneyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
@@ -388,7 +391,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.text,
   },
   resetBtn: {
     padding: 6,
@@ -406,7 +408,6 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: 'center',
@@ -416,12 +417,10 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.text,
   },
   summaryLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: COLORS.textMuted,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -448,7 +447,6 @@ const styles = StyleSheet.create({
   zoneTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.text,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     flex: 1,
@@ -459,27 +457,15 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   levelCell: {
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: COLORS.borderLight,
     ...SHADOWS.small,
-  },
-  levelCellCompleted: {
-    backgroundColor: '#F0FDF4',
-    borderWidth: 2,
-  },
-  levelCellLocked: {
-    backgroundColor: COLORS.surfaceAlt,
-    borderColor: 'transparent',
-    opacity: 0.6,
   },
   levelNumber: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.text,
   },
   starsRow: {
     flexDirection: 'row',
@@ -500,7 +486,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 28,
     alignItems: 'center',
@@ -517,11 +502,10 @@ const styles = StyleSheet.create({
   levelBadgeText: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.white,
+    color: '#FFFFFF',
   },
   modalSubtitle: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginTop: 8,
   },
   difficultyPreview: {
@@ -531,7 +515,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: COLORS.surfaceAlt,
     borderRadius: 12,
     width: '100%',
     justifyContent: 'center',
@@ -539,7 +522,6 @@ const styles = StyleSheet.create({
   difficultyPreviewLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textSecondary,
   },
   difficultyPill: {
     paddingHorizontal: 12,
@@ -549,11 +531,10 @@ const styles = StyleSheet.create({
   difficultyPillText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.white,
+    color: '#FFFFFF',
   },
   modalHint: {
     fontSize: 12,
-    color: COLORS.textMuted,
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 18,
@@ -567,12 +548,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: COLORS.primary,
   },
   rerollText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.primary,
   },
   modalActions: {
     flexDirection: 'row',
@@ -585,13 +564,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
     alignItems: 'center',
   },
   modalCancelText: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.textSecondary,
   },
   modalPlayBtn: {
     flex: 1,
@@ -605,24 +582,20 @@ const styles = StyleSheet.create({
   modalPlayText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.white,
   },
   modalResetConfirmBtn: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: COLORS.error,
     alignItems: 'center',
   },
   resetTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.text,
     marginTop: 12,
   },
   resetDesc: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,

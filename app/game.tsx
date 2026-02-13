@@ -11,7 +11,8 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { COLORS, SHADOWS, DIFFICULTY_COLORS } from "../src/constants/theme";
+import { SHADOWS, DIFFICULTY_COLORS } from "../src/constants/theme";
+import { useColors } from "../src/context/ThemeContext";
 import {
   getRandomDifficultyForLevel,
   TOTAL_LEVELS,
@@ -33,6 +34,7 @@ function formatTime(seconds: number): string {
 
 const useGameScreen = () => {
   const { state, restart, startGame } = useGame();
+  const colors = useColors();
   const {
     journeyLevel,
     difficulty,
@@ -78,9 +80,10 @@ const useGameScreen = () => {
     router.back();
   };
 
-  const diffColor = DIFFICULTY_COLORS[difficulty] || COLORS.primary;
+  const diffColor = DIFFICULTY_COLORS[difficulty] || colors.primary;
 
   return {
+    colors,
     isWide,
     isJourney,
     difficulty,
@@ -106,6 +109,7 @@ const useGameScreen = () => {
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
   const {
+    colors,
     isWide,
     isJourney,
     difficulty,
@@ -127,7 +131,7 @@ export default function GameScreen() {
   } = useGameScreen();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Top Bar */}
       <View style={[styles.topBar, isWide && styles.topBarWide]}>
         <TouchableOpacity
@@ -135,20 +139,20 @@ export default function GameScreen() {
           onPress={handleNewGame}
           activeOpacity={0.6}
         >
-          <Ionicons name="arrow-back" size={22} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.topCenter}>
           {isJourney && (
             <View style={[styles.diffBadge, { backgroundColor: "#7C3AED" }]}>
-              <Text style={styles.diffBadgeText}>LV.{journeyLevel}</Text>
+              <Text style={[styles.diffBadgeText, { color: colors.white }]}>LV.{journeyLevel}</Text>
             </View>
           )}
           <View style={[styles.diffBadge, { backgroundColor: diffColor }]}>
-            <Text style={styles.diffBadgeText}>{difficulty.toUpperCase()}</Text>
+            <Text style={[styles.diffBadgeText, { color: colors.white }]}>{difficulty.toUpperCase()}</Text>
           </View>
           {!isJourney && (
-            <Text style={styles.modeText}>
+            <Text style={[styles.modeText, { color: colors.textSecondary }]}>
               {boxSize}×{boxSize}
             </Text>
           )}
@@ -165,13 +169,13 @@ export default function GameScreen() {
           <Ionicons
             name="close-circle-outline"
             size={16}
-            color={COLORS.error}
+            color={colors.error}
           />
-          <Text style={styles.statText}>
+          <Text style={[styles.statText, { color: colors.textSecondary }]}>
             Mistakes:{" "}
             <Text
               style={{
-                color: mistakes >= 3 ? COLORS.error : COLORS.text,
+                color: mistakes >= 3 ? colors.error : colors.text,
                 fontWeight: "700",
               }}
             >
@@ -180,12 +184,12 @@ export default function GameScreen() {
           </Text>
         </View>
         <TouchableOpacity
-          style={styles.restartBtn}
+          style={[styles.restartBtn, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
           onPress={handleRestart}
           activeOpacity={0.6}
         >
-          <Ionicons name="refresh" size={18} color={COLORS.primary} />
-          <Text style={styles.restartText}>Restart</Text>
+          <Ionicons name="refresh" size={18} color={colors.primary} />
+          <Text style={[styles.restartText, { color: colors.primary }]}>Restart</Text>
         </TouchableOpacity>
       </View>
 
@@ -234,26 +238,26 @@ export default function GameScreen() {
         onRequestClose={() => setShowRestartModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Ionicons name="refresh-circle" size={48} color={COLORS.primary} />
-            <Text style={styles.modalTitle}>Restart Puzzle?</Text>
-            <Text style={styles.modalDesc}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+            <Ionicons name="refresh-circle" size={48} color={colors.primary} />
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Restart Puzzle?</Text>
+            <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
               This will clear all your progress and reset the timer.
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalCancelBtn}
+                style={[styles.modalCancelBtn, { borderColor: colors.borderLight }]}
                 onPress={() => setShowRestartModal(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalConfirmBtn}
+                style={[styles.modalConfirmBtn, { backgroundColor: colors.error }]}
                 onPress={confirmRestart}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalConfirmText}>Restart</Text>
+                <Text style={[styles.modalConfirmText, { color: colors.white }]}>Restart</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -266,7 +270,6 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   topBar: {
     flexDirection: "row",
@@ -296,13 +299,11 @@ const styles = StyleSheet.create({
   diffBadgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: COLORS.white,
     letterSpacing: 0.5,
   },
   modeText: {
     fontSize: 14,
     fontWeight: "600",
-    color: COLORS.textSecondary,
   },
   topRight: {
     flexDirection: "row",
@@ -327,7 +328,6 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 13,
-    color: COLORS.textSecondary,
     fontWeight: "500",
   },
   restartBtn: {
@@ -337,14 +337,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
   },
   restartText: {
     fontSize: 13,
     fontWeight: "600",
-    color: COLORS.primary,
   },
   gameContent: {
     paddingVertical: 8,
@@ -358,7 +355,6 @@ const styles = StyleSheet.create({
   },
   // Pause overlay
   pauseOverlay: {
-    backgroundColor: COLORS.pauseOverlay,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 100,
@@ -366,7 +362,6 @@ const styles = StyleSheet.create({
   pauseTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: COLORS.white,
     marginTop: 16,
   },
   pauseSubtitle: {
@@ -382,13 +377,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 40,
     borderRadius: 16,
-    backgroundColor: COLORS.primary,
     ...SHADOWS.medium,
   },
   resumeBtnText: {
     fontSize: 18,
     fontWeight: "700",
-    color: COLORS.white,
   },
   // Completion overlay
   completionOverlay: {
@@ -398,7 +391,6 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   completionCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: 24,
     padding: 32,
     alignItems: "center",
@@ -410,12 +402,10 @@ const styles = StyleSheet.create({
   completionTitle: {
     fontSize: 26,
     fontWeight: "800",
-    color: COLORS.text,
     marginTop: 12,
   },
   completionSubtitle: {
     fontSize: 15,
-    color: COLORS.textSecondary,
     marginTop: 4,
   },
   completionStats: {
@@ -430,30 +420,25 @@ const styles = StyleSheet.create({
   completionStatValue: {
     fontSize: 20,
     fontWeight: "700",
-    color: COLORS.text,
   },
   completionStatLabel: {
     fontSize: 12,
-    color: COLORS.textMuted,
     marginTop: 2,
   },
   completionDivider: {
     width: 1,
     height: 32,
-    backgroundColor: COLORS.borderLight,
   },
   newGameBtn: {
     marginTop: 28,
     paddingVertical: 14,
     paddingHorizontal: 48,
     borderRadius: 14,
-    backgroundColor: COLORS.primary,
     ...SHADOWS.medium,
   },
   newGameBtnText: {
     fontSize: 17,
     fontWeight: "700",
-    color: COLORS.white,
   },
   gameOverActions: {
     flexDirection: "row",
@@ -469,13 +454,11 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: COLORS.error,
     ...SHADOWS.medium,
   },
   retryBtnText: {
     fontSize: 16,
     fontWeight: "700",
-    color: COLORS.white,
   },
   // Modal
   modalOverlay: {
@@ -485,7 +468,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   modalCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 28,
     alignItems: "center",
@@ -497,12 +479,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: COLORS.text,
     marginTop: 12,
   },
   modalDesc: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     textAlign: "center",
     marginTop: 8,
     lineHeight: 20,
@@ -518,24 +498,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
     alignItems: "center",
   },
   modalCancelText: {
     fontSize: 15,
     fontWeight: "600",
-    color: COLORS.textSecondary,
   },
   modalConfirmBtn: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: COLORS.error,
     alignItems: "center",
   },
   modalConfirmText: {
     fontSize: 15,
     fontWeight: "700",
-    color: COLORS.white,
   },
 });

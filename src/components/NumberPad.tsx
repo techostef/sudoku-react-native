@@ -9,10 +9,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useGame } from '../context/GameContext';
-import { COLORS } from '../constants/theme';
+import { useColors } from '../context/ThemeContext';
 
 const NumberPad = () => {
   const { state, inputNumber, togglePencil, erase, undo, autoPencil } = useGame();
+  const colors = useColors();
   const { width: windowWidth } = useWindowDimensions();
   const gridSize = state.boxSize * state.boxSize;
 
@@ -45,8 +46,10 @@ const NumberPad = () => {
                       width: btnSize,
                       height: btnSize + 16,
                       borderRadius: 8,
+                      backgroundColor: colors.surface,
+                      borderColor: colors.borderLight,
                     },
-                    remaining === 0 && styles.numberBtnDisabled,
+                    remaining === 0 && { backgroundColor: colors.surfaceAlt, borderColor: colors.borderLight, opacity: 0.4 },
                   ]}
                   onPress={() => inputNumber(num)}
                   disabled={remaining === 0}
@@ -57,14 +60,15 @@ const NumberPad = () => {
                       styles.numberText,
                       {
                         fontSize: btnSize * 0.6,
+                        color: colors.primary,
                       },
-                      remaining === 0 && styles.numberTextDisabled,
+                      remaining === 0 && { color: colors.textMuted },
                     ]}
                   >
                     {num}
                   </Text>
                   {remaining > 0 && gridSize <= 16 && (
-                    <Text style={[styles.remainingText, { fontSize: btnSize * 0.2 }]}>
+                    <Text style={[styles.remainingText, { fontSize: btnSize * 0.2, color: colors.textMuted }]}>
                       {remaining}
                     </Text>
                   )}
@@ -77,19 +81,20 @@ const NumberPad = () => {
 
       <View style={styles.toolRow}>
         <TouchableOpacity
-          style={[styles.toolBtn, state.pencilMode && styles.toolBtnActive]}
+          style={[styles.toolBtn, { backgroundColor: colors.surface, borderColor: colors.borderLight }, state.pencilMode && { backgroundColor: colors.pencilActive, borderColor: colors.pencilActive }]}
           onPress={togglePencil}
           activeOpacity={0.6}
         >
           <Ionicons
             name="pencil"
             size={22}
-            color={state.pencilMode ? COLORS.white : COLORS.text}
+            color={state.pencilMode ? colors.white : colors.text}
           />
           <Text
             style={[
               styles.toolLabel,
-              state.pencilMode && styles.toolLabelActive,
+              { color: colors.textSecondary },
+              state.pencilMode && { color: colors.white },
             ]}
           >
             Pencil
@@ -97,30 +102,30 @@ const NumberPad = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.toolBtn}
+          style={[styles.toolBtn, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
           onPress={erase}
           activeOpacity={0.6}
         >
-          <Ionicons name="backspace-outline" size={22} color={COLORS.text} />
-          <Text style={styles.toolLabel}>Erase</Text>
+          <Ionicons name="backspace-outline" size={22} color={colors.text} />
+          <Text style={[styles.toolLabel, { color: colors.textSecondary }]}>Erase</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.toolBtn}
+          style={[styles.toolBtn, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
           onPress={undo}
           activeOpacity={0.6}
         >
-          <Ionicons name="arrow-undo" size={22} color={COLORS.text} />
-          <Text style={styles.toolLabel}>Undo</Text>
+          <Ionicons name="arrow-undo" size={22} color={colors.text} />
+          <Text style={[styles.toolLabel, { color: colors.textSecondary }]}>Undo</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.toolBtn}
+          style={[styles.toolBtn, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
           onPress={autoPencil}
           activeOpacity={0.6}
         >
-          <Ionicons name="color-wand" size={22} color={COLORS.text} />
-          <Text style={styles.toolLabel}>Auto</Text>
+          <Ionicons name="color-wand" size={22} color={colors.text} />
+          <Text style={[styles.toolLabel, { color: colors.textSecondary }]}>Auto</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -156,26 +161,14 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   numberBtn: {
-    backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-  },
-  numberBtnDisabled: {
-    backgroundColor: COLORS.surfaceAlt,
-    borderColor: COLORS.borderLight,
-    opacity: 0.4,
   },
   numberText: {
     fontWeight: '700',
-    color: COLORS.primary,
-  },
-  numberTextDisabled: {
-    color: COLORS.textMuted,
   },
   remainingText: {
-    color: COLORS.textMuted,
     fontWeight: '500',
     marginTop: -2,
   },
@@ -191,23 +184,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 12,
-    backgroundColor: COLORS.surface,
     borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
     minWidth: 72,
-  },
-  toolBtnActive: {
-    backgroundColor: COLORS.pencilActive,
-    borderColor: COLORS.pencilActive,
   },
   toolLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.textSecondary,
     marginTop: 2,
-  },
-  toolLabelActive: {
-    color: COLORS.white,
   },
 });
 

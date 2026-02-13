@@ -1,17 +1,29 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GameProvider } from '../src/context/GameContext';
+import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 
-export default function RootLayout() {
+function InnerLayout() {
+  const { colors } = useTheme();
   return (
-    <GameProvider>
-      <StatusBar style="dark" />
+    <>
+      <StatusBar style={colors.statusBar} />
       <Stack
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
         }}
       />
-    </GameProvider>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <GameProvider>
+        <InnerLayout />
+      </GameProvider>
+    </ThemeProvider>
   );
 }

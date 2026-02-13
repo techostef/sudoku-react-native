@@ -7,7 +7,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGame } from "../context/GameContext";
-import { COLORS, SHADOWS } from "../constants/theme";
+import { useColors } from "../context/ThemeContext";
+import { SHADOWS } from "../constants/theme";
 
 interface IGameoverOverlayProps {
   isJourney: boolean;
@@ -19,54 +20,55 @@ interface IGameoverOverlayProps {
 
 const GameoverOverlay = ({ isJourney, handleBackToJourney, handleNewGame, setShowRestartModal, formatTime }: IGameoverOverlayProps) => {
   const { state, timer, restart } = useGame();
+  const colors = useColors();
   return (
     <View style={[StyleSheet.absoluteFill, styles.completionOverlay]}>
-      <View style={styles.completionCard}>
-        <Ionicons name="sad" size={64} color={COLORS.error} />
-        <Text style={styles.completionTitle}>Game Over</Text>
-        <Text style={styles.completionSubtitle}>You made 3 mistakes</Text>
+      <View style={[styles.completionCard, { backgroundColor: colors.surface }]}>
+        <Ionicons name="sad" size={64} color={colors.error} />
+        <Text style={[styles.completionTitle, { color: colors.text }]}>Game Over</Text>
+        <Text style={[styles.completionSubtitle, { color: colors.textSecondary }]}>You made 3 mistakes</Text>
 
         <View style={styles.completionStats}>
           <View style={styles.completionStatItem}>
-            <Text style={styles.completionStatValue}>
+            <Text style={[styles.completionStatValue, { color: colors.text }]}>
               {formatTime(timer)}
             </Text>
-            <Text style={styles.completionStatLabel}>Time</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Time</Text>
           </View>
-          <View style={styles.completionDivider} />
+          <View style={[styles.completionDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.completionStatItem}>
-            <Text style={[styles.completionStatValue, { color: COLORS.error }]}>
+            <Text style={[styles.completionStatValue, { color: colors.error }]}>
               {state.mistakes}/3
             </Text>
-            <Text style={styles.completionStatLabel}>Mistakes</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Mistakes</Text>
           </View>
-          <View style={styles.completionDivider} />
+          <View style={[styles.completionDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.completionStatItem}>
-            <Text style={styles.completionStatValue}>
+            <Text style={[styles.completionStatValue, { color: colors.text }]}>
               {state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1)}
             </Text>
-            <Text style={styles.completionStatLabel}>Difficulty</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Difficulty</Text>
           </View>
         </View>
 
         <View style={styles.gameOverActions}>
           <TouchableOpacity
-            style={styles.retryBtn}
+            style={[styles.retryBtn, { backgroundColor: colors.error }]}
             onPress={() => {
               setShowRestartModal(false);
               restart();
             }}
             activeOpacity={0.8}
           >
-            <Ionicons name="refresh" size={20} color={COLORS.white} />
-            <Text style={styles.retryBtnText}>Retry</Text>
+            <Ionicons name="refresh" size={20} color={colors.white} />
+            <Text style={[styles.retryBtnText, { color: colors.white }]}>Retry</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.newGameBtn}
+            style={[styles.newGameBtn, { backgroundColor: colors.primary }]}
             onPress={isJourney ? handleBackToJourney : handleNewGame}
             activeOpacity={0.8}
           >
-            <Text style={styles.newGameBtnText}>
+            <Text style={[styles.newGameBtnText, { color: colors.white }]}>
               {isJourney ? "Back to Journey" : "New Game"}
             </Text>
           </TouchableOpacity>
@@ -86,7 +88,6 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   completionCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: 24,
     padding: 32,
     alignItems: "center",
@@ -98,12 +99,10 @@ const styles = StyleSheet.create({
   completionTitle: {
     fontSize: 26,
     fontWeight: "800",
-    color: COLORS.text,
     marginTop: 12,
   },
   completionSubtitle: {
     fontSize: 15,
-    color: COLORS.textSecondary,
     marginTop: 4,
   },
   completionStats: {
@@ -118,30 +117,25 @@ const styles = StyleSheet.create({
   completionStatValue: {
     fontSize: 20,
     fontWeight: "700",
-    color: COLORS.text,
   },
   completionStatLabel: {
     fontSize: 12,
-    color: COLORS.textMuted,
     marginTop: 2,
   },
   completionDivider: {
     width: 1,
     height: 32,
-    backgroundColor: COLORS.borderLight,
   },
   newGameBtn: {
     marginTop: 0,
     paddingVertical: 14,
     paddingHorizontal: 48,
     borderRadius: 14,
-    backgroundColor: COLORS.primary,
     ...SHADOWS.medium,
   },
   newGameBtnText: {
     fontSize: 17,
     fontWeight: "700",
-    color: COLORS.white,
   },
   gameOverActions: {
     flexDirection: "row",
@@ -157,13 +151,11 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: COLORS.error,
     ...SHADOWS.medium,
   },
   retryBtnText: {
     fontSize: 16,
     fontWeight: "700",
-    color: COLORS.white,
   },
 });
 

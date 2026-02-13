@@ -8,7 +8,8 @@ import {
   Platform,
 } from 'react-native';
 import { useGame, CellData } from '../context/GameContext';
-import { COLORS } from '../constants/theme';
+import { useColors } from '../context/ThemeContext';
+import { ThemeColors } from '../constants/theme';
 
 const Cell = React.memo(function Cell({
   cell,
@@ -22,6 +23,7 @@ const Cell = React.memo(function Cell({
   isSameValue,
   isError,
   onPress,
+  colors,
 }: {
   cell: CellData;
   row: number;
@@ -34,6 +36,7 @@ const Cell = React.memo(function Cell({
   isSameValue: boolean;
   isError: boolean;
   onPress: () => void;
+  colors: ThemeColors;
 }) {
   const gridSize = boxSize * boxSize;
   const isLeftBoxBorder = col % boxSize === 0 && col % boxSize !== 0;
@@ -41,10 +44,10 @@ const Cell = React.memo(function Cell({
   const isRightBoxBorder = (col + 1) % boxSize === 0 && col < gridSize - 1;
   const isBottomBoxBorder = (row + 1) % boxSize === 0 && row < gridSize - 1;
 
-  let bgColor = COLORS.surface;
-  if (isSelected) bgColor = COLORS.selected;
-  else if (isSameValue) bgColor = COLORS.highlight;
-  else if (isRelated) bgColor = COLORS.related;
+  let bgColor = colors.surface;
+  if (isSelected) bgColor = colors.highlight;
+  else if (isSameValue) bgColor = colors.highlight;
+  else if (isRelated) bgColor = colors.related;
 
   const fontSize = cellSize * (gridSize <= 9 ? 0.5 : gridSize <= 16 ? 0.38 : 0.3);
   const noteSize = cellSize / (boxSize + 0.5);
@@ -55,7 +58,7 @@ const Cell = React.memo(function Cell({
       activeOpacity={0.6}
       onPress={onPress}
       style={[
-        styles.cell,
+        staticStyles.cell,
         {
           width: cellSize,
           height: cellSize,
@@ -64,27 +67,27 @@ const Cell = React.memo(function Cell({
           borderRightWidth: isRightBoxBorder ? 2.5 : StyleSheet.hairlineWidth,
           borderTopWidth: isTopBoxBorder ? 2.5 : StyleSheet.hairlineWidth,
           borderBottomWidth: isBottomBoxBorder ? 2.5 : StyleSheet.hairlineWidth,
-          borderLeftColor: isLeftBoxBorder ? COLORS.boxBorder : COLORS.border,
-          borderRightColor: isRightBoxBorder ? COLORS.boxBorder : COLORS.border,
-          borderTopColor: isTopBoxBorder ? COLORS.boxBorder : COLORS.border,
-          borderBottomColor: isBottomBoxBorder ? COLORS.boxBorder : COLORS.border,
+          borderLeftColor: isLeftBoxBorder ? colors.boxBorder : colors.border,
+          borderRightColor: isRightBoxBorder ? colors.boxBorder : colors.border,
+          borderTopColor: isTopBoxBorder ? colors.boxBorder : colors.border,
+          borderBottomColor: isBottomBoxBorder ? colors.boxBorder : colors.border,
         },
-        isError && { backgroundColor: COLORS.errorBg },
+        isError && { backgroundColor: colors.errorBg },
       ]}
     >
       {cell.value !== 0 ? (
         <Text
           style={[
-            styles.cellText,
+            staticStyles.cellText,
             {
               fontSize,
               color: cell.isGiven
-                ? COLORS.given
+                ? colors.given
                 : cell.isLocked
-                ? COLORS.given
+                ? colors.given
                 : isError
-                ? COLORS.error
-                : COLORS.userInput,
+                ? colors.error
+                : colors.userInput,
               fontWeight: cell.isGiven || cell.isLocked ? '700' : '500',
             },
           ]}
@@ -92,7 +95,7 @@ const Cell = React.memo(function Cell({
           {cell.value}
         </Text>
       ) : cell.notes.length > 0 ? (
-        <View style={[styles.notesContainer, { width: cellSize - 2, height: cellSize - 2 }]}>
+        <View style={[staticStyles.notesContainer, { width: cellSize - 2, height: cellSize - 2 }]}>
           {Array.from({ length: gridSize }, (_, i) => i + 1).map((n) => (
             <View
               key={n}
@@ -107,11 +110,11 @@ const Cell = React.memo(function Cell({
                 <Text
                   style={{
                     fontSize: noteFontSize,
-                    color: COLORS.noteText,
+                    color: colors.noteText,
                     width: noteFontSize,
                     textAlign: 'center',  
                     fontWeight: '500',
-                    backgroundColor: selectedValue === n ? COLORS.highlight : 'transparent',
+                    backgroundColor: selectedValue === n ? colors.highlight : 'transparent',
                   }}
                 >
                   {n}
@@ -127,6 +130,7 @@ const Cell = React.memo(function Cell({
 
 export default function Board() {
   const { state, selectCell } = useGame();
+  const colors = useColors();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { grid, boxSize, selectedCell } = state;
   const gridSize = boxSize * boxSize;
@@ -148,15 +152,16 @@ export default function Board() {
   return (
     <View
       style={[
-        styles.board,
+        staticStyles.board,
         {
           width: boardSize + 3,
           height: boardSize + 3,
+          borderColor: colors.boxBorder,
         },
       ]}
     >
       {grid.map((row, rIdx) => (
-        <View key={rIdx} style={styles.row}>
+        <View key={rIdx} style={staticStyles.row}>
           {row.map((cell, cIdx) => {
             const isSelected =
               selectedCell !== null &&
@@ -197,6 +202,7 @@ export default function Board() {
                 isSameValue={isSameValue}
                 isError={isError}
                 onPress={() => selectCell(rIdx, cIdx)}
+                colors={colors}
               />
             );
           })}
@@ -206,10 +212,9 @@ export default function Board() {
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   board: {
     borderWidth: 2.5,
-    borderColor: COLORS.boxBorder,
     borderRadius: 4,
     overflow: 'hidden',
     alignSelf: 'center',
@@ -222,8 +227,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRightWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderRightColor: COLORS.border,
-    borderBottomColor: COLORS.border,
   },
   cellText: {
     textAlign: 'center',

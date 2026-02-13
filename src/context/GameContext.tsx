@@ -10,6 +10,7 @@ import React, {
 import { BoxSize, Difficulty, generatePuzzle, getValidCandidates, isValidPlacement } from '../utils/sudoku';
 import { saveRecord, GameRecord } from '../utils/storage';
 import { completeJourneyLevel } from '../utils/journey';
+import { loadSounds, playSound } from '../utils/sound';
 
 export interface CellData {
   value: number;
@@ -337,27 +338,44 @@ const GameContext = createContext<GameContextType | null>(null);
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const [tick, setTick] = useState(0);
-  // const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // useEffect(() => {
-  //   if (state.gameStarted && !state.isPaused && !state.isComplete && !state.isGameOver) {
-  //     timerRef.current = setInterval(() => {
-  //       setTick((prev) => prev + 1);
-  //     }, 1000);
-  //   } else {
-  //     if (timerRef.current) {
-  //       clearInterval(timerRef.current);
-  //       timerRef.current = null;
-  //     }
-  //   }
-  //   return () => {
-  //     if (timerRef.current) {
-  //       clearInterval(timerRef.current);
-  //     }
-  //   };
-  // }, [state.gameStarted, state.isPaused, state.isComplete, state.isGameOver]);
+  // Load sounds on mount
+  useEffect(() => {
+    loadSounds();
+  }, []);
 
-  // Save record when game completes or game over
+  // Track mistakes to detect wrong placement
+  const prevMistakesRef = useRef(0);
+  // Track locked cell count to detect correct placement
+  const prevLockedCountRef = useRef(0);
+
+  // Play sounds on correct/wrong placement
+  useEffect(() => {
+    if (!state.gameStarted) {
+      prevMistakesRef.current = 0;
+      prevLockedCountRef.current = 0;
+      return;
+    }
+
+    const lockedCount = state.grid.reduce(
+      (sum, row) => sum + row.filter((c) => c.isLocked).length,
+      0
+    );
+
+    // Don't play sounds on game over or complete (those have their own sounds)
+    if (!state.isComplete && !state.isGameOver) {
+      if (state.mistakes > prevMistakesRef.current) {
+        playSound('hitWrong');
+      } else if (lockedCount > prevLockedCountRef.current) {
+        playSound('hitCorrect');
+      }
+    }
+
+    prevMistakesRef.current = state.mistakes;
+    prevLockedCountRef.current = lockedCount;
+  }, [state.grid, state.mistakes]);
+
+  // Save record when game completes or game over, and play win/lose sounds
   const prevCompleteRef = useRef(false);
   const prevGameOverRef = useRef(false);
   useEffect(() => {
@@ -373,6 +391,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         completed: state.isComplete,
       };
       saveRecord(record);
+
+      // Play win or lose sound
+      if (state.isComplete && !prevCompleteRef.current) {
+        playSound('winGame');
+      } else if (state.isGameOver && !prevGameOverRef.current) {
+        playSound('loseGame');
+      }
 
       // Complete journey level if in journey mode and won
       if (state.isComplete && state.journeyLevel !== null) {

@@ -7,7 +7,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGame } from "../context/GameContext";
-import { COLORS, SHADOWS } from "../constants/theme";
+import { useColors } from "../context/ThemeContext";
+import { SHADOWS } from "../constants/theme";
 
 interface IPauseOverlayProps {
   formatTime: (seconds: number) => string;
@@ -15,18 +16,19 @@ interface IPauseOverlayProps {
 
 const PauseOverlay = ({ formatTime }: IPauseOverlayProps) => {
   const { timer, togglePause } = useGame();
+  const colors = useColors();
   return (
-    <View style={[StyleSheet.absoluteFill, styles.pauseOverlay]}>
-      <Ionicons name="pause-circle" size={80} color={COLORS.white} />
-      <Text style={styles.pauseTitle}>Game Paused</Text>
+    <View style={[StyleSheet.absoluteFill, styles.pauseOverlay, { backgroundColor: colors.pauseOverlay }]}>
+      <Ionicons name="pause-circle" size={80} color={colors.white} />
+      <Text style={[styles.pauseTitle, { color: colors.white }]}>Game Paused</Text>
       <Text style={styles.pauseSubtitle}>Time: {formatTime(timer)}</Text>
       <TouchableOpacity
-        style={styles.resumeBtn}
+        style={[styles.resumeBtn, { backgroundColor: colors.primary }]}
         onPress={togglePause}
         activeOpacity={0.8}
       >
-        <Ionicons name="play" size={24} color={COLORS.white} />
-        <Text style={styles.resumeBtnText}>Resume</Text>
+        <Ionicons name="play" size={24} color={colors.white} />
+        <Text style={[styles.resumeBtnText, { color: colors.white }]}>Resume</Text>
       </TouchableOpacity>
     </View>
   );
@@ -36,7 +38,6 @@ const PauseOverlay = ({ formatTime }: IPauseOverlayProps) => {
 const styles = StyleSheet.create({
   // Pause overlay
   pauseOverlay: {
-    backgroundColor: COLORS.pauseOverlay,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 100,
@@ -44,7 +45,6 @@ const styles = StyleSheet.create({
   pauseTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: COLORS.white,
     marginTop: 16,
   },
   pauseSubtitle: {
@@ -60,13 +60,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 40,
     borderRadius: 16,
-    backgroundColor: COLORS.primary,
     ...SHADOWS.medium,
   },
   resumeBtnText: {
     fontSize: 18,
     fontWeight: "700",
-    color: COLORS.white,
   },
 });
 

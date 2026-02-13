@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useGame } from '../context/GameContext';
-import { COLORS } from '../constants/theme';
+import { useColors } from '../context/ThemeContext';
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -12,6 +12,7 @@ function formatTime(seconds: number): string {
 
 export default function Timer() {
   const { state, togglePause, setTimer } = useGame();
+  const colors = useColors();
   const [tick, setTick] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -36,8 +37,8 @@ export default function Timer() {
 
   return (
     <View style={styles.container}>
-      <Ionicons name="time-outline" size={18} color={COLORS.textSecondary} />
-      <Text style={styles.timeText}>{formatTime(tick)}</Text>
+      <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+      <Text style={[styles.timeText, { color: colors.text }]}>{formatTime(tick)}</Text>
       <TouchableOpacity
         onPress={togglePause}
         style={styles.pauseBtn}
@@ -46,7 +47,7 @@ export default function Timer() {
         <Ionicons
           name={state.isPaused ? 'play' : 'pause'}
           size={20}
-          color={COLORS.primary}
+          color={colors.primary}
         />
       </TouchableOpacity>
     </View>
@@ -62,7 +63,6 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.text,
     fontVariant: ['tabular-nums'],
     minWidth: 56,
   },
