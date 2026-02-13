@@ -3,6 +3,41 @@ import { Difficulty } from './sudoku';
 
 const JOURNEY_KEY = 'sudoku_journey_progress';
 const TOTAL_LEVELS = 500;
+const LEVELS_PER_ZONE = 10;
+
+// Number of zones per tier: Beginner(5), Novice(5), Intermediate(5), Advanced(5), Veteran(10), Master(10), Grandmaster(10) = 50 zones
+const TIER_ZONE_COUNTS = [5, 5, 5, 5, 10, 10, 10];
+
+function getTierStartLevel(tierIndex: number): number {
+  let start = 1;
+  for (let i = 0; i < tierIndex; i++) {
+    start += TIER_ZONE_COUNTS[i] * LEVELS_PER_ZONE;
+  }
+  return start;
+}
+
+function getTierIndex(level: number): number {
+  let accumulated = 0;
+  for (let i = 0; i < TIER_ZONE_COUNTS.length; i++) {
+    accumulated += TIER_ZONE_COUNTS[i] * LEVELS_PER_ZONE;
+    if (level <= accumulated) return i;
+  }
+  return TIER_ZONE_COUNTS.length - 1;
+}
+
+function getZoneStart(level: number): number {
+  return Math.floor((level - 1) / LEVELS_PER_ZONE) * LEVELS_PER_ZONE + 1;
+}
+
+function getFirstLevelsOfTier(tierIndex: number): number[] {
+  if (tierIndex < 0 || tierIndex >= TIER_ZONE_COUNTS.length) return [];
+  const start = getTierStartLevel(tierIndex);
+  const result: number[] = [];
+  for (let z = 0; z < TIER_ZONE_COUNTS[tierIndex]; z++) {
+    result.push(start + z * LEVELS_PER_ZONE);
+  }
+  return result;
+}
 
 export interface JourneyLevel {
   level: number;
@@ -17,11 +52,12 @@ export interface JourneyProgress {
 }
 
 function getDefaultProgress(): JourneyProgress {
+  const beginnerFirstLevels = new Set(getFirstLevelsOfTier(0));
   const levels: JourneyLevel[] = [];
   for (let i = 1; i <= TOTAL_LEVELS; i++) {
     levels.push({
       level: i,
-      unlocked: i === 1,
+      unlocked: beginnerFirstLevels.has(i),
       completed: false,
     });
   }
@@ -71,9 +107,30 @@ export async function completeJourneyLevel(
   }
   progress.levels[idx].completed = true;
 
-  // Unlock next level
-  if (idx + 1 < progress.levels.length) {
+  // Unlock next level within the same zone
+  const zoneStart = getZoneStart(level);
+  const zoneEnd = zoneStart + LEVELS_PER_ZONE - 1;
+  if (level < zoneEnd && idx + 1 < progress.levels.length) {
     progress.levels[idx + 1].unlocked = true;
+  }
+
+  // Check if entire zone is now complete → unlock next tier
+  let zoneComplete = true;
+  for (let l = zoneStart; l <= zoneEnd; l++) {
+    if (!progress.levels[l - 1].completed) {
+      zoneComplete = false;
+      break;
+    }
+  }
+  if (zoneComplete) {
+    const currentTier = getTierIndex(level);
+    const nextTier = currentTier + 1;
+    const nextTierFirstLevels = getFirstLevelsOfTier(nextTier);
+    for (const fl of nextTierFirstLevels) {
+      if (fl - 1 < progress.levels.length) {
+        progress.levels[fl - 1].unlocked = true;
+      }
+    }
   }
 
   await saveJourneyProgress(progress);

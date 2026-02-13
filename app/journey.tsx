@@ -24,24 +24,60 @@ import {
 } from '../src/utils/journey';
 import { Difficulty } from '../src/utils/sudoku';
 
+interface ZoneDef {
+  label: string;
+  range: readonly [number, number];
+  color: string;
+}
+
+const TIER_COLORS = {
+  beginner: DIFFICULTY_COLORS.easy,
+  novice: DIFFICULTY_COLORS.moderate,
+  intermediate: '#0EA5E9',
+  advanced: DIFFICULTY_COLORS.hard,
+  veteran: '#F97316',
+  master: DIFFICULTY_COLORS.expert,
+  grandmaster: DIFFICULTY_COLORS.extreme,
+};
+
+const ZONE_NAMES: { tier: string; names: string[]; color: string }[] = [
+  { tier: 'Beginner', color: TIER_COLORS.beginner, names: ['Village', 'Meadow', 'Forest', 'Lake', 'Valley'] },
+  { tier: 'Novice', color: TIER_COLORS.novice, names: ['River', 'Hills', 'Coast', 'Plains', 'Grove'] },
+  { tier: 'Intermediate', color: TIER_COLORS.intermediate, names: ['Cave', 'Desert', 'Ruins', 'Canyon', 'Marsh'] },
+  { tier: 'Advanced', color: TIER_COLORS.advanced, names: ['Mountain', 'Volcano', 'Glacier', 'Storm Peak', 'Citadel'] },
+  { tier: 'Veteran', color: TIER_COLORS.veteran, names: ['Fortress', 'Dungeon', 'Wasteland', 'Inferno', 'Abyss', 'Tundra', 'Labyrinth', 'Shadow Keep', 'Iron Gate', 'Thunder Ridge'] },
+  { tier: 'Master', color: TIER_COLORS.master, names: ['Dragon Lair', 'Dark Tower', 'Obsidian Forge', 'Blood Moon', 'Phantom Isle', 'Crystal Depths', 'War Summit', 'Doom Bridge', 'Ember Throne', 'Lost Temple'] },
+  { tier: 'Grandmaster', color: TIER_COLORS.grandmaster, names: ['Chaos Realm', 'Void Gate', 'Eternal Spire', 'Astral Rift', 'Celestial Peak', 'Oblivion', 'Infinity Core', 'Omega Sanctum', 'Genesis Flame', 'Final Horizon'] },
+];
+
+function buildZones(): ZoneDef[] {
+  const zones: ZoneDef[] = [];
+  let start = 1;
+  for (const tier of ZONE_NAMES) {
+    for (const name of tier.names) {
+      const end = start + 9;
+      zones.push({
+        label: `${tier.tier} ${name}`,
+        range: [start, end] as const,
+        color: tier.color,
+      });
+      start = end + 1;
+    }
+  }
+  return zones;
+}
+
+const ALL_ZONES = buildZones();
+
 function getDifficultyLabel(level: number): string {
-  if (level <= 50) return 'Beginner';
-  if (level <= 100) return 'Novice';
-  if (level <= 150) return 'Intermediate';
-  if (level <= 200) return 'Advanced';
-  if (level <= 300) return 'Veteran';
-  if (level <= 400) return 'Master';
-  return 'Grandmaster';
+  const zone = ALL_ZONES.find((z) => level >= z.range[0] && level <= z.range[1]);
+  if (!zone) return 'Grandmaster';
+  return zone.label.split(' ')[0];
 }
 
 function getZoneColor(level: number): string {
-  if (level <= 50) return DIFFICULTY_COLORS.easy;
-  if (level <= 100) return DIFFICULTY_COLORS.moderate;
-  if (level <= 150) return '#0EA5E9';
-  if (level <= 200) return DIFFICULTY_COLORS.hard;
-  if (level <= 300) return '#F97316';
-  if (level <= 400) return DIFFICULTY_COLORS.expert;
-  return DIFFICULTY_COLORS.extreme;
+  const zone = ALL_ZONES.find((z) => level >= z.range[0] && level <= z.range[1]);
+  return zone?.color ?? DIFFICULTY_COLORS.extreme;
 }
 
 function renderStars(stars: number | undefined) {
@@ -115,16 +151,7 @@ export default function JourneyScreen() {
   const totalStars = progress.levels.reduce((sum, l) => sum + (l.stars ?? 0), 0);
   const maxStars = TOTAL_LEVELS * 3;
 
-  // Group levels into zones for section headers
-  const zones = [
-    { label: 'Beginner Zone', range: [1, 50] as const, color: getZoneColor(1) },
-    { label: 'Novice Zone', range: [51, 100] as const, color: getZoneColor(51) },
-    { label: 'Intermediate Zone', range: [101, 150] as const, color: getZoneColor(101) },
-    { label: 'Advanced Zone', range: [151, 200] as const, color: getZoneColor(151) },
-    { label: 'Veteran Zone', range: [201, 300] as const, color: getZoneColor(201) },
-    { label: 'Master Zone', range: [301, 400] as const, color: getZoneColor(301) },
-    { label: 'Grandmaster Zone', range: [401, 500] as const, color: getZoneColor(401) },
-  ];
+  const zones = ALL_ZONES;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
