@@ -152,6 +152,15 @@ export default function StartMenu() {
       </TouchableOpacity>
 
       <TouchableOpacity
+        style={[styles.journeyBtn, isWide && styles.startBtnWide]}
+        onPress={() => router.push('/journey')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="map" size={22} color={COLORS.white} />
+        <Text style={styles.journeyBtnText}>Journey</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
         style={[styles.dashboardBtn, isWide && styles.startBtnWide]}
         onPress={() => router.push('/dashboard')}
         activeOpacity={0.8}
@@ -317,6 +326,22 @@ const styles = StyleSheet.create({
   },
   startBtnText: {
     fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  journeyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#7C3AED',
+    marginTop: 12,
+    ...SHADOWS.medium,
+  },
+  journeyBtnText: {
+    fontSize: 18,
     fontWeight: '700',
     color: COLORS.white,
   },

@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import { BoxSize, Difficulty, generatePuzzle, getValidCandidates, isValidPlacement } from '../utils/sudoku';
 import { saveRecord, GameRecord } from '../utils/storage';
+import { completeJourneyLevel } from '../utils/journey';
 
 export interface CellData {
   value: number;
@@ -39,10 +40,11 @@ export interface GameState {
   maxMistakes: number;
   history: HistoryEntry[];
   gameStarted: boolean;
+  journeyLevel: number | null;
 }
 
 type GameAction =
-  | { type: 'START_GAME'; boxSize: BoxSize; difficulty: Difficulty }
+  | { type: 'START_GAME'; boxSize: BoxSize; difficulty: Difficulty; journeyLevel?: number }
   | { type: 'SELECT_CELL'; row: number; col: number }
   | { type: 'INPUT_NUMBER'; num: number }
   | { type: 'TOGGLE_PENCIL' }
@@ -68,6 +70,7 @@ const initialState: GameState = {
   maxMistakes: 3,
   history: [],
   gameStarted: false,
+  journeyLevel: null,
 };
 
 function checkComplete(grid: CellData[][]): boolean {
@@ -107,6 +110,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         grid,
         solution,
         gameStarted: true,
+        journeyLevel: action.journeyLevel ?? null,
       };
     }
 
@@ -306,7 +310,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
 interface GameContextType {
   state: GameState;
-  startGame: (boxSize: BoxSize, difficulty: Difficulty) => void;
+  startGame: (boxSize: BoxSize, difficulty: Difficulty, journeyLevel?: number) => void;
   selectCell: (row: number, col: number) => void;
   inputNumber: (num: number) => void;
   togglePencil: () => void;
@@ -357,14 +361,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         completed: state.isComplete,
       };
       saveRecord(record);
+
+      // Complete journey level if in journey mode and won
+      if (state.isComplete && state.journeyLevel !== null) {
+        completeJourneyLevel(state.journeyLevel, state.mistakes);
+      }
     }
     prevCompleteRef.current = state.isComplete;
     prevGameOverRef.current = state.isGameOver;
   }, [state.isComplete, state.isGameOver]);
 
   const startGame = useCallback(
-    (boxSize: BoxSize, difficulty: Difficulty) => {
-      dispatch({ type: 'START_GAME', boxSize, difficulty });
+    (boxSize: BoxSize, difficulty: Difficulty, journeyLevel?: number) => {
+      dispatch({ type: 'START_GAME', boxSize, difficulty, journeyLevel });
     },
     []
   );

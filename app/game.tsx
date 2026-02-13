@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../src/context/GameContext';
 import { COLORS, SHADOWS, DIFFICULTY_COLORS } from '../src/constants/theme';
+import { getRandomDifficultyForLevel, TOTAL_LEVELS } from '../src/utils/journey';
 import Board from '../src/components/Board';
 import NumberPad from '../src/components/NumberPad';
 import Timer from '../src/components/Timer';
@@ -24,12 +25,13 @@ function formatTime(seconds: number): string {
 }
 
 export default function GameScreen() {
-  const { state, togglePause, restart } = useGame();
+  const { state, togglePause, restart, startGame } = useGame();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [showRestartModal, setShowRestartModal] = useState(false);
 
+  const isJourney = state.journeyLevel !== null;
   const isWide = width > 600;
 
   const handleRestart = () => {
@@ -42,6 +44,21 @@ export default function GameScreen() {
   };
 
   const handleNewGame = () => {
+    router.back();
+  };
+
+  const handleNextLevel = () => {
+    if (!isJourney || state.journeyLevel === null) return;
+    const nextLevel = state.journeyLevel + 1;
+    if (nextLevel > TOTAL_LEVELS) {
+      router.back();
+      return;
+    }
+    const diff = getRandomDifficultyForLevel(nextLevel);
+    startGame(3, diff, nextLevel);
+  };
+
+  const handleBackToJourney = () => {
     router.back();
   };
 
@@ -60,14 +77,23 @@ export default function GameScreen() {
         </TouchableOpacity>
 
         <View style={styles.topCenter}>
+          {isJourney && (
+            <View style={[styles.diffBadge, { backgroundColor: '#7C3AED' }]}>
+              <Text style={styles.diffBadgeText}>
+                LV.{state.journeyLevel}
+              </Text>
+            </View>
+          )}
           <View style={[styles.diffBadge, { backgroundColor: diffColor }]}>
             <Text style={styles.diffBadgeText}>
               {state.difficulty.toUpperCase()}
             </Text>
           </View>
-          <Text style={styles.modeText}>
-            {state.boxSize}×{state.boxSize}
-          </Text>
+          {!isJourney && (
+            <Text style={styles.modeText}>
+              {state.boxSize}×{state.boxSize}
+            </Text>
+          )}
         </View>
 
         <View style={styles.topRight}>
@@ -169,10 +195,12 @@ export default function GameScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.newGameBtn}
-                onPress={handleNewGame}
+                onPress={isJourney ? handleBackToJourney : handleNewGame}
                 activeOpacity={0.8}
               >
-                <Text style={styles.newGameBtnText}>New Game</Text>
+                <Text style={styles.newGameBtnText}>
+                  {isJourney ? 'Back to Journey' : 'New Game'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -213,13 +241,36 @@ export default function GameScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.newGameBtn}
-              onPress={handleNewGame}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.newGameBtnText}>New Game</Text>
-            </TouchableOpacity>
+            {isJourney ? (
+              <View style={styles.gameOverActions}>
+                <TouchableOpacity
+                  style={[styles.newGameBtn, { backgroundColor: '#7C3AED', flex: 1 }]}
+                  onPress={handleNextLevel}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.newGameBtnText}>
+                    {state.journeyLevel !== null && state.journeyLevel >= TOTAL_LEVELS
+                      ? 'Journey Complete!'
+                      : 'Next Level'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.newGameBtn, { flex: 1 }]}
+                  onPress={handleBackToJourney}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.newGameBtnText}>Journey Map</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.newGameBtn}
+                onPress={handleNewGame}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.newGameBtnText}>New Game</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       )}
