@@ -22,6 +22,13 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    eas build --profile preview
    ```
 
+4. build the android app standalone on locally
+
+   ```bash
+   npx expo run:android --variant release
+   ```
+   Note: location apk file in android/app/build/outputs/apk/release/app-release.apk
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)

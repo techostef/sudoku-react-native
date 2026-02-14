@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ const NumberPad = () => {
   const { width: windowWidth } = useWindowDimensions();
   const gridSize = state.boxSize * state.boxSize;
 
+  const { grid, selectedCell } = state;
+
   const maxPadWidth = Platform.OS === 'web'
     ? Math.min(windowWidth - 10, 560)
     : windowWidth + 10;
@@ -30,6 +32,17 @@ const NumberPad = () => {
     rows.push(numbers.slice(i, i + cols));
   }
 
+  const selectedNotes = useMemo(() => {
+    if (!selectedCell) return {};
+    const [r, c] = selectedCell;
+    if (!grid[r] || !grid[r][c]) return {};
+    const value: Record<number, boolean> = {};
+    grid[r][c].notes.forEach((note) => {
+      value[note] = true;
+    });
+    return value;
+  }, [selectedCell, grid]);
+
   return (
     <View style={[styles.container, { maxWidth: maxPadWidth }]}>
       <View style={styles.numbersContainer}>
@@ -37,6 +50,7 @@ const NumberPad = () => {
           <View key={rIdx} style={styles.numberRow}>
             {row.map((num) => {
               const remaining = getRemainingCount(state.grid, num);
+              const isNote = selectedNotes[num];
               return (
                 <TouchableOpacity
                   key={num}
@@ -46,6 +60,7 @@ const NumberPad = () => {
                       width: btnSize,
                       height: btnSize + 16,
                       borderRadius: 8,
+                      opacity: isNote ? 1 : 0.4,
                       backgroundColor: colors.surface,
                       borderColor: colors.borderLight,
                     },
