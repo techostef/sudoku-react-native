@@ -37,9 +37,11 @@ const NumberPad = () => {
   for (i; i < maxButton3x3; i += cols) {
     rows3x3.push(numbers.slice(i, i + cols));
   }
-  numbers = Array.from({ length: maxButton4x4 }, (_, i) => i + 1);
-  for (i; i < maxButton4x4; i += cols) {
-    rows4x4.push(numbers.slice(i, i + cols));
+  if (gridSize === 16) {
+    numbers = Array.from({ length: maxButton4x4 }, (_, i) => i + 1);
+    for (i; i < maxButton4x4; i += cols) {
+      rows4x4.push(numbers.slice(i, i + cols));
+    }
   }
 
   const selectedNotes = useMemo(() => {
