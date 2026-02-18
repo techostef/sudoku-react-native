@@ -20,7 +20,6 @@ import { useTheme } from '../src/context/ThemeContext';
 const MODES: { value: BoxSize; label: string; desc: string }[] = [
   { value: 3, label: '3×3', desc: '9×9 grid' },
   { value: 4, label: '4×4', desc: '16×16 grid' },
-  { value: 5, label: '5×5', desc: '25×25 grid' },
 ];
 
 const DIFFICULTIES: { value: Difficulty; label: string; desc: string }[] = [

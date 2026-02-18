@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,12 @@ import {
 import { useGame, CellData } from '../context/GameContext';
 import { useColors } from '../context/ThemeContext';
 import { ThemeColors } from '../constants/theme';
+import { getValueCell } from '../utils/sudoku';
 
 const Cell = React.memo(function Cell({
+  fontSize,
+  noteSize,
+  noteFontSize,
   cell,
   row,
   col,
@@ -25,6 +29,9 @@ const Cell = React.memo(function Cell({
   onPress,
   colors,
 }: {
+  fontSize: number;
+  noteSize: number;
+  noteFontSize: number;
   cell: CellData;
   row: number;
   col: number;
@@ -48,10 +55,6 @@ const Cell = React.memo(function Cell({
   if (isSelected) bgColor = colors.highlight;
   else if (isSameValue) bgColor = colors.highlight;
   else if (isRelated) bgColor = colors.related;
-
-  const fontSize = cellSize * (gridSize <= 9 ? 0.5 : gridSize <= 16 ? 0.38 : 0.3);
-  const noteSize = cellSize / (boxSize + 0.5);
-  const noteFontSize = noteSize * 0.7;
 
   return (
     <TouchableOpacity
@@ -106,7 +109,7 @@ const Cell = React.memo(function Cell({
                 justifyContent: 'center',
               }}
             >
-              {cell.notes.includes(n) && (
+              {cell.notes.includes(getValueCell(n) as any) && (
                 <Text
                   style={{
                     fontSize: noteFontSize,
@@ -117,7 +120,7 @@ const Cell = React.memo(function Cell({
                     backgroundColor: selectedValue === n ? colors.highlight : 'transparent',
                   }}
                 >
-                  {n}
+                  {getValueCell(n)}
                 </Text>
               )}
             </View>
@@ -126,6 +129,20 @@ const Cell = React.memo(function Cell({
       ) : null}
     </TouchableOpacity>
   );
+}, ({selectedValue: prevSelectedValue, ...prevProps}, {selectedValue: nextSelectedValue, ...nextProps}) => {
+  if (JSON.stringify(prevProps) === JSON.stringify(nextProps)) {
+    if (prevSelectedValue !== nextSelectedValue) {
+      if (prevProps.cell.notes.includes(prevSelectedValue) || prevProps.cell.notes.includes(nextSelectedValue)) {
+        return false;
+      }
+      if (nextProps.cell.notes.includes(prevSelectedValue) || nextProps.cell.notes.includes(nextSelectedValue)) {
+        return false;
+      }
+      return true;
+    }
+    return true
+  }
+  return false;
 });
 
 export default function Board() {
@@ -146,6 +163,17 @@ export default function Board() {
     const [r, c] = selectedCell;
     return grid[r]?.[c]?.value ?? 0;
   }, [selectedCell, grid]);
+
+  const handlePressCell = useCallback(
+    (row: number, col: number) => {
+      selectCell(row, col);
+    },
+    [selectCell]
+  );
+  
+  const fontSize = cellSize * (gridSize <= 9 ? 0.7 : gridSize <= 16 ? 0.8 : 0.3);
+  const noteSize = cellSize / (boxSize + (gridSize <= 9 ? 0.5 : 0.7));
+  const noteFontSize = noteSize * 0.9
 
   if (grid.length === 0) return null;
 
@@ -190,7 +218,10 @@ export default function Board() {
 
             return (
               <Cell
-                key={cIdx}
+                fontSize={fontSize}
+                noteSize={noteSize}
+                noteFontSize={noteFontSize}
+                key={`${rIdx}-${cIdx}`}
                 cell={cell}
                 row={rIdx}
                 col={cIdx}
@@ -201,7 +232,7 @@ export default function Board() {
                 isRelated={isRelated}
                 isSameValue={isSameValue}
                 isError={isError}
-                onPress={() => selectCell(rIdx, cIdx)}
+                onPress={useCallback(() => handlePressCell(rIdx, cIdx), [handlePressCell, rIdx, cIdx])}
                 colors={colors}
               />
             );

@@ -1,3 +1,5 @@
+import { ALPHA } from "../constants/utils";
+
 export type BoxSize = 3 | 4 | 5;
 export type Difficulty = 'easy' | 'moderate' | 'hard' | 'expert' | 'extreme';
 
@@ -70,10 +72,11 @@ function shuffleGrid(baseGrid: number[][], boxSize: number): number[][] {
   }
 
   // Permute values
-  const perm = shuffle(Array.from({ length: size }, (_, i) => i + 1));
+  const perm = shuffle(Array.from({ length: size }, (_, i) => i + 1)) as any;
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
-      g[r][c] = perm[g[r][c] - 1];
+      let v = getValueCell(perm[g[r][c] - 1])
+      g[r][c] = v as any
     }
   }
 
@@ -129,8 +132,9 @@ export function getValidCandidates(
   const size = boxSize * boxSize;
   const candidates: number[] = [];
   for (let num = 1; num <= size; num++) {
-    if (isValidPlacement(grid, row, col, num, boxSize)) {
-      candidates.push(num);
+    const v = getValueCell(num)
+    if (isValidPlacement(grid, row, col, v as any, boxSize)) {
+      candidates.push(v as any);
     }
   }
   return candidates;
@@ -165,4 +169,8 @@ export function isValidPlacement(
   }
 
   return true;
+}
+
+export const getValueCell = (v: number): string =>  {
+  return ALPHA[v] ?? v
 }
