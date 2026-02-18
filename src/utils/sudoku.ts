@@ -89,10 +89,10 @@ function getCellsToRemove(boxSize: BoxSize, difficulty: Difficulty): number {
 
   const percentages: Record<Difficulty, number> = {
     easy: 0.36,
-    moderate: 0.46,
-    hard: 0.54,
-    expert: 0.62,
-    extreme: 0.7,
+    moderate: 0.42,
+    hard: 0.48,
+    expert: 0.54,
+    extreme: 0.62,
   };
 
   return Math.floor(totalCells * percentages[difficulty]);
