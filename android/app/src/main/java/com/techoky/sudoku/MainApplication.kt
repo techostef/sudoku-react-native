@@ -1,4 +1,4 @@
-package com.sudoku.app
+package com.techoky.sudoku
 
 import android.app.Application
 import android.content.res.Configuration

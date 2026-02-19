@@ -1,4 +1,4 @@
-package com.sudoku.app
+package com.techoky.sudoku
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

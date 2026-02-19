@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sudoku.app"
+      "bundleIdentifier": "com.techoky.sudoku"
     },
     "androidNavigationBar": {
       "backgroundColor": "#FFFFFF",
@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/logo.png",
         "monochromeImage": "./assets/images/logo.png"
       },
-      "package": "com.sudoku.app"
+      "package": "com.techoky.sudoku"
     },
     "web": {
       "output": "static",
