@@ -16,8 +16,9 @@
       "bundleIdentifier": "com.sudoku.app"
     },
     "androidNavigationBar": {
-      "backgroundColor":"#ffffff",
-      "barStyle": "#ffffff"
+      "backgroundColor": "#FFFFFF",
+      "barStyle": "dark-content",
+      "enforceContrast": false
     },
     "android": {
       "adaptiveIcon": {
@@ -33,6 +34,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-navigation-bar",
+        {
+          "backgroundColor": "#FFFFFF",
+          "barStyle": "dark",
+          "position": "relative"
+        }
+      ],
       [
         "react-native-google-mobile-ads",
         {
