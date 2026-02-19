@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   useWindowDimensions,
-  Platform,
   Modal,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ import { useGame } from '../src/context/GameContext';
 import { BoxSize, Difficulty } from '../src/utils/sudoku';
 import { SHADOWS, DIFFICULTY_COLORS, THEME_META } from '../src/constants/theme';
 import { useTheme } from '../src/context/ThemeContext';
+import AdBanner from '../src/components/AdBanner';
 
 const MODES: { value: BoxSize; label: string; desc: string }[] = [
   { value: 3, label: '3×3', desc: '9×9 grid' },
@@ -42,193 +44,203 @@ export default function StartMenu() {
 
   const isWide = width > 600;
 
+  const isMobile = Platform.OS === 'android' || Platform.OS === 'ios';
+
   const handleStart = () => {
     startGame(boxSize, difficulty);
     router.push('/game');
   };
 
   return (
-    <ScrollView
-      style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}
-      contentContainerStyle={[
-        styles.content,
-        isWide && styles.contentWide,
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-          <Ionicons name="grid" size={40} color={colors.white} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
+        style={{ paddingTop: insets.top }}
+        contentContainerStyle={[
+          styles.content,
+          isWide && styles.contentWide,
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View style={[{ backgroundColor: colors.primary }]}>
+            <Image
+              source={require('../assets/images/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={[styles.title, { color: colors.text }]}>SUDOKU</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Challenge your mind</Text>
         </View>
-        <Text style={[styles.title, { color: colors.text }]}>SUDOKU</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Challenge your mind</Text>
-      </View>
 
-      <View style={[styles.section, isWide && styles.sectionWide]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Grid Size</Text>
-        <View style={styles.modeRow}>
-          {MODES.map((mode) => (
-            <TouchableOpacity
-              key={mode.value}
-              style={[
-                styles.modeBtn,
-                { backgroundColor: colors.surface, borderColor: colors.borderLight },
-                boxSize === mode.value && { borderColor: colors.primary, backgroundColor: colors.selected },
-              ]}
-              onPress={() => setBoxSize(mode.value)}
-              activeOpacity={0.7}
-            >
-              <Text
+        <View style={[styles.section, isWide && styles.sectionWide]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Grid Size</Text>
+          <View style={styles.modeRow}>
+            {MODES.map((mode) => (
+              <TouchableOpacity
+                key={mode.value}
                 style={[
-                  styles.modeBtnLabel,
-                  { color: colors.textSecondary },
-                  boxSize === mode.value && { color: colors.primary },
+                  styles.modeBtn,
+                  { backgroundColor: colors.surface, borderColor: colors.borderLight },
+                  boxSize === mode.value && { borderColor: colors.primary, backgroundColor: colors.selected },
                 ]}
+                onPress={() => setBoxSize(mode.value)}
+                activeOpacity={0.7}
               >
-                {mode.label}
-              </Text>
-              <Text
-                style={[
-                  styles.modeBtnDesc,
-                  { color: colors.textMuted },
-                  boxSize === mode.value && { color: colors.primaryLight },
-                ]}
-              >
-                {mode.desc}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={[styles.section, isWide && styles.sectionWide]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Difficulty</Text>
-        <View style={styles.difficultyList}>
-          {DIFFICULTIES.map((diff) => (
-            <TouchableOpacity
-              key={diff.value}
-              style={[
-                styles.diffBtn,
-                { backgroundColor: colors.surface, borderColor: colors.borderLight, borderLeftColor: colors.borderLight },
-                difficulty === diff.value && { borderColor: colors.primary, backgroundColor: colors.selected, borderLeftWidth: 4, borderLeftColor: DIFFICULTY_COLORS[diff.value] },
-              ]}
-              onPress={() => setDifficulty(diff.value)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.diffBtnContent}>
-                <View
+                <Text
                   style={[
-                    styles.diffDot,
-                    { backgroundColor: DIFFICULTY_COLORS[diff.value] },
+                    styles.modeBtnLabel,
+                    { color: colors.textSecondary },
+                    boxSize === mode.value && { color: colors.primary },
                   ]}
-                />
-                <View>
-                  <Text
-                    style={[
-                      styles.diffBtnLabel,
-                      { color: colors.text },
-                      difficulty === diff.value && { color: colors.primaryDark },
-                    ]}
-                  >
-                    {diff.label}
-                  </Text>
-                  <Text style={[styles.diffBtnDesc, { color: colors.textMuted }]}>{diff.desc}</Text>
-                </View>
-              </View>
-              {difficulty === diff.value && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={22}
-                  color={DIFFICULTY_COLORS[diff.value]}
-                />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.startBtn, isWide && styles.startBtnWide, { backgroundColor: colors.primary }]}
-        onPress={handleStart}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="play" size={24} color={colors.white} />
-        <Text style={[styles.startBtnText, { color: colors.white }]}>Start Game</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.journeyBtn, isWide && styles.startBtnWide]}
-        onPress={() => router.push('/journey')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="map" size={22} color={colors.white} />
-        <Text style={[styles.journeyBtnText, { color: colors.white }]}>Journey</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.dashboardBtn, isWide && styles.startBtnWide, { backgroundColor: colors.surface, borderColor: colors.primary }]}
-        onPress={() => router.push('/dashboard')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="stats-chart" size={22} color={colors.primary} />
-        <Text style={[styles.dashboardBtnText, { color: colors.primary }]}>Records</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.themeBtn, isWide && styles.startBtnWide, { backgroundColor: colors.surfaceAlt, borderColor: colors.borderLight }]}
-        onPress={() => setShowThemeModal(true)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="color-palette" size={22} color={colors.text} />
-        <Text style={[styles.themeBtnText, { color: colors.text }]}>Theme</Text>
-      </TouchableOpacity>
-
-      <View style={{ height: insets.bottom + 32 }} />
-
-      {/* Theme Picker Modal */}
-      <Modal
-        visible={showThemeModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowThemeModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Choose Theme</Text>
-            <View style={styles.themeList}>
-              {THEME_META.map((t) => (
-                <TouchableOpacity
-                  key={t.key}
-                  style={[
-                    styles.themeOption,
-                    { borderColor: colors.borderLight },
-                    themeName === t.key && { borderColor: colors.primary, backgroundColor: colors.selected },
-                  ]}
-                  onPress={() => {
-                    setTheme(t.key);
-                    setShowThemeModal(false);
-                  }}
-                  activeOpacity={0.7}
                 >
-                  <View style={[styles.themePreview, { backgroundColor: t.preview }]} />
-                  <Text style={[styles.themeLabel, { color: colors.text }]}>{t.label}</Text>
-                  {themeName === t.key && (
-                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity
-              style={[styles.modalCloseBtn, { backgroundColor: colors.primary }]}
-              onPress={() => setShowThemeModal(false)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.modalCloseBtnText, { color: colors.white }]}>Done</Text>
-            </TouchableOpacity>
+                  {mode.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.modeBtnDesc,
+                    { color: colors.textMuted },
+                    boxSize === mode.value && { color: colors.primaryLight },
+                  ]}
+                >
+                  {mode.desc}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
-      </Modal>
-    </ScrollView>
+
+        <View style={[styles.section, isWide && styles.sectionWide]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Difficulty</Text>
+          <View style={styles.difficultyList}>
+            {DIFFICULTIES.map((diff) => (
+              <TouchableOpacity
+                key={diff.value}
+                style={[
+                  styles.diffBtn,
+                  { backgroundColor: colors.surface, borderColor: colors.borderLight, borderLeftColor: colors.borderLight },
+                  difficulty === diff.value && { borderColor: colors.primary, backgroundColor: colors.selected, borderLeftWidth: 4, borderLeftColor: DIFFICULTY_COLORS[diff.value] },
+                ]}
+                onPress={() => setDifficulty(diff.value)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.diffBtnContent}>
+                  <View
+                    style={[
+                      styles.diffDot,
+                      { backgroundColor: DIFFICULTY_COLORS[diff.value] },
+                    ]}
+                  />
+                  <View>
+                    <Text
+                      style={[
+                        styles.diffBtnLabel,
+                        { color: colors.text },
+                        difficulty === diff.value && { color: colors.primaryDark },
+                      ]}
+                    >
+                      {diff.label}
+                    </Text>
+                    <Text style={[styles.diffBtnDesc, { color: colors.textMuted }]}>{diff.desc}</Text>
+                  </View>
+                </View>
+                {difficulty === diff.value && (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={22}
+                    color={DIFFICULTY_COLORS[diff.value]}
+                  />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.startBtn, isWide && styles.startBtnWide, { backgroundColor: colors.primary }]}
+          onPress={handleStart}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="play" size={24} color={colors.white} />
+          <Text style={[styles.startBtnText, { color: colors.white }]}>Start Game</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.journeyBtn, isWide && styles.startBtnWide]}
+          onPress={() => router.push('/journey')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="map" size={22} color={colors.white} />
+          <Text style={[styles.journeyBtnText, { color: colors.white }]}>Journey</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.dashboardBtn, isWide && styles.startBtnWide, { backgroundColor: colors.surface, borderColor: colors.primary }]}
+          onPress={() => router.push('/dashboard')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="stats-chart" size={22} color={colors.primary} />
+          <Text style={[styles.dashboardBtnText, { color: colors.primary }]}>Records</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.themeBtn, isWide && styles.startBtnWide, { backgroundColor: colors.surfaceAlt, borderColor: colors.borderLight }]}
+          onPress={() => setShowThemeModal(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="color-palette" size={22} color={colors.text} />
+          <Text style={[styles.themeBtnText, { color: colors.text }]}>Theme</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: insets.bottom + 110 }} />
+
+        {/* Theme Picker Modal */}
+        <Modal
+          visible={showThemeModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowThemeModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Choose Theme</Text>
+              <View style={styles.themeList}>
+                {THEME_META.map((t) => (
+                  <TouchableOpacity
+                    key={t.key}
+                    style={[
+                      styles.themeOption,
+                      { borderColor: colors.borderLight },
+                      themeName === t.key && { borderColor: colors.primary, backgroundColor: colors.selected },
+                    ]}
+                    onPress={() => {
+                      setTheme(t.key);
+                      setShowThemeModal(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.themePreview, { backgroundColor: t.preview }]} />
+                    <Text style={[styles.themeLabel, { color: colors.text }]}>{t.label}</Text>
+                    {themeName === t.key && (
+                      <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity
+                style={[styles.modalCloseBtn, { backgroundColor: colors.primary }]}
+                onPress={() => setShowThemeModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.modalCloseBtnText, { color: colors.white }]}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
+
+      {isMobile && <AdBanner />}
+    </View>
   );
 }
 
@@ -258,6 +270,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
     ...SHADOWS.large,
+  },
+  logo: {
+    width: 90,
+    height: 90,
   },
   title: {
     fontSize: 36,
@@ -396,6 +412,10 @@ const styles = StyleSheet.create({
   themeBtnText: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  adContainer: {
+    marginTop: 20,
+    alignItems: 'center',
   },
   modalOverlay: {
     flex: 1,
