@@ -65,7 +65,6 @@ export default function AdBanner() {
   const prodUnitId =
     Platform.OS === 'ios'
       ? process.env.EXPO_PUBLIC_ADMOB_BANNER_ID_IOS || process.env.EXPO_PUBLIC_ADMOB_BANNER_ID
-      // : process.env.EXPO_PUBLIC_ADMOB_BANNER_ID_ANDROID || process.env.EXPO_PUBLIC_ADMOB_BANNER_ID;
       : 'ca-app-pub-4835981370605782/9183779192';
 
   const unitId = __DEV__ ? TestIds.BANNER : prodUnitId;

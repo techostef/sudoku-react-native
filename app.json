@@ -8,6 +8,10 @@
     "scheme": "sudoku",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "react-native-google-mobile-ads": {
+      "android_app_id": "ca-app-pub-4835981370605782~3792676121",
+      "ios_app_id": "ca-app-pub-4835981370605782~3792676121"
+    },
     "splash": {
       "backgroundColor": "#F8FAFC"
     },
@@ -45,7 +49,8 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-4835981370605782~3792676121"
+          "androidAppId": "ca-app-pub-4835981370605782~3792676121",
+          "iosAppId": "ca-app-pub-4835981370605782~3792676121"
         }
       ],
       [
@@ -69,6 +74,10 @@
       "router": {},
       "eas": {
         "projectId": "d545b60d-3dba-4679-804b-f0a5c23e06fb"
+      },
+      "react-native-google-mobile-ads": {
+        "android_app_id": "ca-app-pub-4835981370605782~3792676121",
+        "ios_app_id": "ca-app-pub-4835981370605782~3792676121"
       }
     },
     "owner": "tech88stef"
