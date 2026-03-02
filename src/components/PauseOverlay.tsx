@@ -8,6 +8,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useGame } from "../context/GameContext";
 import { useColors } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 import { SHADOWS } from "../constants/theme";
 
 interface IPauseOverlayProps {
@@ -17,10 +18,11 @@ interface IPauseOverlayProps {
 const PauseOverlay = ({ formatTime }: IPauseOverlayProps) => {
   const { timer, togglePause } = useGame();
   const colors = useColors();
+  const { t } = useLanguage();
   return (
     <View style={[StyleSheet.absoluteFill, styles.pauseOverlay, { backgroundColor: colors.pauseOverlay }]}>
       <Ionicons name="pause-circle" size={80} color={colors.white} />
-      <Text style={[styles.pauseTitle, { color: colors.white }]}>Game Paused</Text>
+      <Text style={[styles.pauseTitle, { color: colors.white }]}>{t.overlay.gamePaused}</Text>
       <Text style={styles.pauseSubtitle}>Time: {formatTime(timer)}</Text>
       <TouchableOpacity
         style={[styles.resumeBtn, { backgroundColor: colors.primary }]}
@@ -28,7 +30,7 @@ const PauseOverlay = ({ formatTime }: IPauseOverlayProps) => {
         activeOpacity={0.8}
       >
         <Ionicons name="play" size={24} color={colors.white} />
-        <Text style={[styles.resumeBtnText, { color: colors.white }]}>Resume</Text>
+        <Text style={[styles.resumeBtnText, { color: colors.white }]}>{t.overlay.resume}</Text>
       </TouchableOpacity>
     </View>
   );

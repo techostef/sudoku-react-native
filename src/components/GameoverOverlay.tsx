@@ -8,6 +8,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useGame } from "../context/GameContext";
 import { useColors } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 import { SHADOWS } from "../constants/theme";
 
 interface IGameoverOverlayProps {
@@ -21,33 +22,34 @@ interface IGameoverOverlayProps {
 const GameoverOverlay = ({ isJourney, handleBackToJourney, handleNewGame, setShowRestartModal, formatTime }: IGameoverOverlayProps) => {
   const { state, timer, restart } = useGame();
   const colors = useColors();
+  const { t } = useLanguage();
   return (
     <View style={[StyleSheet.absoluteFill, styles.completionOverlay]}>
       <View style={[styles.completionCard, { backgroundColor: colors.surface }]}>
         <Ionicons name="sad" size={64} color={colors.error} />
-        <Text style={[styles.completionTitle, { color: colors.text }]}>Game Over</Text>
-        <Text style={[styles.completionSubtitle, { color: colors.textSecondary }]}>You made 3 mistakes</Text>
+        <Text style={[styles.completionTitle, { color: colors.text }]}>{t.overlay.gameOver}</Text>
+        <Text style={[styles.completionSubtitle, { color: colors.textSecondary }]}>{t.overlay.madeMistakes}</Text>
 
         <View style={styles.completionStats}>
           <View style={styles.completionStatItem}>
             <Text style={[styles.completionStatValue, { color: colors.text }]}>
               {formatTime(timer)}
             </Text>
-            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Time</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>{t.overlay.time}</Text>
           </View>
           <View style={[styles.completionDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.completionStatItem}>
             <Text style={[styles.completionStatValue, { color: colors.error }]}>
               {state.mistakes}/3
             </Text>
-            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Mistakes</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>{t.overlay.mistakes}</Text>
           </View>
           <View style={[styles.completionDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.completionStatItem}>
             <Text style={[styles.completionStatValue, { color: colors.text }]}>
               {state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1)}
             </Text>
-            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Difficulty</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>{t.overlay.difficulty}</Text>
           </View>
         </View>
 
@@ -61,7 +63,7 @@ const GameoverOverlay = ({ isJourney, handleBackToJourney, handleNewGame, setSho
             activeOpacity={0.8}
           >
             <Ionicons name="refresh" size={20} color={colors.white} />
-            <Text style={[styles.retryBtnText, { color: colors.white }]}>Retry</Text>
+            <Text style={[styles.retryBtnText, { color: colors.white }]}>{t.overlay.retry}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.newGameBtn, { backgroundColor: colors.primary }]}
@@ -69,7 +71,7 @@ const GameoverOverlay = ({ isJourney, handleBackToJourney, handleNewGame, setSho
             activeOpacity={0.8}
           >
             <Text style={[styles.newGameBtnText, { color: colors.white }]}>
-              {isJourney ? "Back to Journey" : "New Game"}
+              {isJourney ? t.overlay.backToJourney : t.overlay.newGame}
             </Text>
           </TouchableOpacity>
         </View>

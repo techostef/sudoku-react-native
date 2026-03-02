@@ -17,27 +17,32 @@ import { useGame } from '../src/context/GameContext';
 import { BoxSize, Difficulty } from '../src/utils/sudoku';
 import { SHADOWS, DIFFICULTY_COLORS, THEME_META } from '../src/constants/theme';
 import { useTheme } from '../src/context/ThemeContext';
+import { useLanguage } from '../src/context/LanguageContext';
+import { LANGUAGE_META } from '../src/i18n/translations';
 import AdBanner from '../src/components/AdBanner';
 
-const MODES: { value: BoxSize; label: string; desc: string }[] = [
-  { value: 3, label: '3×3', desc: '9×9 grid' },
-  { value: 4, label: '4×4', desc: '16×16 grid' },
+const MODES: { value: BoxSize; label: string; descKey: 'grid9x9' | 'grid16x16' }[] = [
+  { value: 3, label: '3×3', descKey: 'grid9x9' },
+  { value: 4, label: '4×4', descKey: 'grid16x16' },
 ];
 
-const DIFFICULTIES: { value: Difficulty; label: string; desc: string }[] = [
-  { value: 'easy', label: 'Easy', desc: 'Great for beginners' },
-  { value: 'moderate', label: 'Moderate', desc: 'A fair challenge' },
-  { value: 'hard', label: 'Hard', desc: 'For experienced players' },
-  { value: 'expert', label: 'Expert', desc: 'Serious puzzlers only' },
-  { value: 'extreme', label: 'Extreme', desc: 'Ultimate challenge' },
+type DiffKey = 'easy' | 'moderate' | 'hard' | 'expert' | 'extreme';
+const DIFFICULTY_KEYS: { value: Difficulty; labelKey: DiffKey; descKey: `${DiffKey}Desc` }[] = [
+  { value: 'easy', labelKey: 'easy', descKey: 'easyDesc' },
+  { value: 'moderate', labelKey: 'moderate', descKey: 'moderateDesc' },
+  { value: 'hard', labelKey: 'hard', descKey: 'hardDesc' },
+  { value: 'expert', labelKey: 'expert', descKey: 'expertDesc' },
+  { value: 'extreme', labelKey: 'extreme', descKey: 'extremeDesc' },
 ];
 
 export default function StartMenu() {
   const [boxSize, setBoxSize] = useState<BoxSize>(3);
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const { startGame } = useGame();
   const { colors, themeName, setTheme } = useTheme();
+  const { t, language, setLanguage } = useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -70,11 +75,11 @@ export default function StartMenu() {
             />
           </View>
           <Text style={[styles.title, { color: colors.text }]}>SUDOKU</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Challenge your mind</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t.home.subtitle}</Text>
         </View>
 
         <View style={[styles.section, isWide && styles.sectionWide]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Grid Size</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.home.gridSize}</Text>
           <View style={styles.modeRow}>
             {MODES.map((mode) => (
               <TouchableOpacity
@@ -103,7 +108,7 @@ export default function StartMenu() {
                     boxSize === mode.value && { color: colors.primaryLight },
                   ]}
                 >
-                  {mode.desc}
+                  {t.home[mode.descKey]}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -111,9 +116,9 @@ export default function StartMenu() {
         </View>
 
         <View style={[styles.section, isWide && styles.sectionWide]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Difficulty</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.home.difficulty}</Text>
           <View style={styles.difficultyList}>
-            {DIFFICULTIES.map((diff) => (
+            {DIFFICULTY_KEYS.map((diff) => (
               <TouchableOpacity
                 key={diff.value}
                 style={[
@@ -139,9 +144,9 @@ export default function StartMenu() {
                         difficulty === diff.value && { color: colors.primaryDark },
                       ]}
                     >
-                      {diff.label}
+                      {t.home[diff.labelKey]}
                     </Text>
-                    <Text style={[styles.diffBtnDesc, { color: colors.textMuted }]}>{diff.desc}</Text>
+                    <Text style={[styles.diffBtnDesc, { color: colors.textMuted }]}>{t.home[diff.descKey]}</Text>
                   </View>
                 </View>
                 {difficulty === diff.value && (
@@ -162,7 +167,7 @@ export default function StartMenu() {
           activeOpacity={0.8}
         >
           <Ionicons name="play" size={24} color={colors.white} />
-          <Text style={[styles.startBtnText, { color: colors.white }]}>Start Game</Text>
+          <Text style={[styles.startBtnText, { color: colors.white }]}>{t.home.startGame}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -171,7 +176,7 @@ export default function StartMenu() {
           activeOpacity={0.8}
         >
           <Ionicons name="map" size={22} color={colors.white} />
-          <Text style={[styles.journeyBtnText, { color: colors.white }]}>Journey</Text>
+          <Text style={[styles.journeyBtnText, { color: colors.white }]}>{t.home.journey}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -180,7 +185,7 @@ export default function StartMenu() {
           activeOpacity={0.8}
         >
           <Ionicons name="stats-chart" size={22} color={colors.primary} />
-          <Text style={[styles.dashboardBtnText, { color: colors.primary }]}>Records</Text>
+          <Text style={[styles.dashboardBtnText, { color: colors.primary }]}>{t.home.records}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -189,7 +194,16 @@ export default function StartMenu() {
           activeOpacity={0.8}
         >
           <Ionicons name="color-palette" size={22} color={colors.text} />
-          <Text style={[styles.themeBtnText, { color: colors.text }]}>Theme</Text>
+          <Text style={[styles.themeBtnText, { color: colors.text }]}>{t.home.theme}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.themeBtn, isWide && styles.startBtnWide, { backgroundColor: colors.surfaceAlt, borderColor: colors.borderLight, marginTop: 12 }]}
+          onPress={() => setShowLanguageModal(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="language" size={22} color={colors.text} />
+          <Text style={[styles.themeBtnText, { color: colors.text }]}>{t.home.language}</Text>
         </TouchableOpacity>
 
         <View style={{ height: insets.bottom + 110 }} />
@@ -203,25 +217,25 @@ export default function StartMenu() {
         >
           <View style={styles.modalOverlay}>
             <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Choose Theme</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>{t.home.chooseTheme}</Text>
               <View style={styles.themeList}>
-                {THEME_META.map((t) => (
+                {THEME_META.map((theme) => (
                   <TouchableOpacity
-                    key={t.key}
+                    key={theme.key}
                     style={[
                       styles.themeOption,
                       { borderColor: colors.borderLight },
-                      themeName === t.key && { borderColor: colors.primary, backgroundColor: colors.selected },
+                      themeName === theme.key && { borderColor: colors.primary, backgroundColor: colors.selected },
                     ]}
                     onPress={() => {
-                      setTheme(t.key);
+                      setTheme(theme.key);
                       setShowThemeModal(false);
                     }}
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.themePreview, { backgroundColor: t.preview }]} />
-                    <Text style={[styles.themeLabel, { color: colors.text }]}>{t.label}</Text>
-                    {themeName === t.key && (
+                    <View style={[styles.themePreview, { backgroundColor: theme.preview }]} />
+                    <Text style={[styles.themeLabel, { color: colors.text }]}>{theme.label}</Text>
+                    {themeName === theme.key && (
                       <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
                     )}
                   </TouchableOpacity>
@@ -232,12 +246,56 @@ export default function StartMenu() {
                 onPress={() => setShowThemeModal(false)}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.modalCloseBtnText, { color: colors.white }]}>Done</Text>
+                <Text style={[styles.modalCloseBtnText, { color: colors.white }]}>{t.home.done}</Text>
               </TouchableOpacity>
             </View>
           </View>
         </Modal>
       </ScrollView>
+
+      {/* Language Picker Modal */}
+      <Modal
+        visible={showLanguageModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t.home.chooseLanguage}</Text>
+            <View style={styles.themeList}>
+              {LANGUAGE_META.map((lang) => (
+                <TouchableOpacity
+                  key={lang.key}
+                  style={[
+                    styles.themeOption,
+                    { borderColor: colors.borderLight },
+                    language === lang.key && { borderColor: colors.primary, backgroundColor: colors.selected },
+                  ]}
+                  onPress={() => {
+                    setLanguage(lang.key);
+                    setShowLanguageModal(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.langFlag}>{lang.flag}</Text>
+                  <Text style={[styles.themeLabel, { color: colors.text }]}>{lang.label}</Text>
+                  {language === lang.key && (
+                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={[styles.modalCloseBtn, { backgroundColor: colors.primary }]}
+              onPress={() => setShowLanguageModal(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.modalCloseBtnText, { color: colors.white }]}>{t.home.done}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {isMobile && <AdBanner />}
     </View>
@@ -469,5 +527,8 @@ const styles = StyleSheet.create({
   modalCloseBtnText: {
     fontSize: 16,
     fontWeight: '700',
+  },
+  langFlag: {
+    fontSize: 24,
   },
 });

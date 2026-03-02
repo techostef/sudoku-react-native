@@ -24,6 +24,7 @@ import GameoverOverlay from "@/src/components/GameoverOverlay";
 import PauseOverlay from "@/src/components/PauseOverlay";
 import CompletionOverlay from "@/src/components/CompletionOverlay";
 import { useGame } from "@/src/context/GameContext";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -35,6 +36,7 @@ function formatTime(seconds: number): string {
 const useGameScreen = () => {
   const { state, restart, startGame } = useGame();
   const colors = useColors();
+  const { t } = useLanguage();
   const {
     journeyLevel,
     difficulty,
@@ -84,6 +86,7 @@ const useGameScreen = () => {
 
   return {
     colors,
+    t,
     isWide,
     isJourney,
     difficulty,
@@ -110,6 +113,7 @@ export default function GameScreen() {
   const insets = useSafeAreaInsets();
   const {
     colors,
+    t,
     isWide,
     isJourney,
     difficulty,
@@ -172,7 +176,7 @@ export default function GameScreen() {
             color={colors.error}
           />
           <Text style={[styles.statText, { color: colors.textSecondary }]}>
-            Mistakes:{" "}
+            {t.game.mistakes}:{" "}
             <Text
               style={{
                 color: mistakes >= 3 ? colors.error : colors.text,
@@ -189,7 +193,7 @@ export default function GameScreen() {
           activeOpacity={0.6}
         >
           <Ionicons name="refresh" size={18} color={colors.primary} />
-          <Text style={[styles.restartText, { color: colors.primary }]}>Restart</Text>
+          <Text style={[styles.restartText, { color: colors.primary }]}>{t.game.restart}</Text>
         </TouchableOpacity>
       </View>
 
@@ -240,9 +244,9 @@ export default function GameScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <Ionicons name="refresh-circle" size={48} color={colors.primary} />
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Restart Puzzle?</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t.game.restartPuzzle}</Text>
             <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
-              This will clear all your progress and reset the timer.
+              {t.game.restartDesc}
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
@@ -250,14 +254,14 @@ export default function GameScreen() {
                 onPress={() => setShowRestartModal(false)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>{t.game.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalConfirmBtn, { backgroundColor: colors.error }]}
                 onPress={confirmRestart}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.modalConfirmText, { color: colors.white }]}>Restart</Text>
+                <Text style={[styles.modalConfirmText, { color: colors.white }]}>{t.game.restart}</Text>
               </TouchableOpacity>
             </View>
           </View>

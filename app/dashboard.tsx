@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SHADOWS, DIFFICULTY_COLORS } from '../src/constants/theme';
 import { useColors } from '../src/context/ThemeContext';
+import { useLanguage } from '../src/context/LanguageContext';
 import { GameRecord, loadRecords, clearRecords } from '../src/utils/storage';
 
 function formatTime(seconds: number): string {
@@ -36,6 +37,7 @@ export default function DashboardScreen() {
   const [records, setRecords] = useState<GameRecord[]>([]);
   const [showClearModal, setShowClearModal] = useState(false);
   const colors = useColors();
+  const { t } = useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -74,7 +76,7 @@ export default function DashboardScreen() {
                 color={colors.white}
               />
               <Text style={[styles.resultText, { color: colors.white }]}>
-                {item.completed ? 'Won' : 'Lost'}
+                {item.completed ? t.dashboard.resultWon : t.dashboard.resultLost}
               </Text>
             </View>
           </View>
@@ -83,14 +85,14 @@ export default function DashboardScreen() {
 
         <View style={styles.recordDetails}>
           <View style={styles.recordDetail}>
-            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Grid</Text>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>{t.dashboard.grid}</Text>
             <Text style={[styles.detailValue, { color: colors.text }]}>
               {item.boxSize}×{item.boxSize}
             </Text>
           </View>
           <View style={[styles.recordDetailDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.recordDetail}>
-            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Difficulty</Text>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>{t.dashboard.difficulty}</Text>
             <View style={[styles.diffPill, { backgroundColor: diffColor }]}>
               <Text style={[styles.diffPillText, { color: colors.white }]}>
                 {item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}
@@ -99,12 +101,12 @@ export default function DashboardScreen() {
           </View>
           <View style={[styles.recordDetailDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.recordDetail}>
-            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Time</Text>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>{t.dashboard.time}</Text>
             <Text style={[styles.detailValue, { color: colors.text }]}>{formatTime(item.time)}</Text>
           </View>
           <View style={[styles.recordDetailDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.recordDetail}>
-            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Mistakes</Text>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>{t.dashboard.mistakes}</Text>
             <Text style={[styles.detailValue, { color: colors.text }, item.mistakes >= 3 && { color: colors.error }]}>
               {item.mistakes}/3
             </Text>
@@ -125,7 +127,7 @@ export default function DashboardScreen() {
         >
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.text }]}>Records</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t.dashboard.title}</Text>
         <TouchableOpacity
           style={styles.clearBtn}
           onPress={() => records.length > 0 && setShowClearModal(true)}
@@ -145,24 +147,24 @@ export default function DashboardScreen() {
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="game-controller" size={20} color={colors.primary} />
           <Text style={[styles.statValue, { color: colors.text }]}>{records.length}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Played</Text>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>{t.dashboard.played}</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="trophy" size={20} color={colors.success} />
           <Text style={[styles.statValue, { color: colors.text }]}>{wins}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Won</Text>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>{t.dashboard.won}</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="sad" size={20} color={colors.error} />
           <Text style={[styles.statValue, { color: colors.text }]}>{losses}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Lost</Text>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>{t.dashboard.lost}</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="timer" size={20} color={colors.pencilActive} />
           <Text style={[styles.statValue, { color: colors.text }]}>
             {bestTime !== null ? formatTime(bestTime) : '--:--'}
           </Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Best</Text>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>{t.dashboard.best}</Text>
         </View>
       </View>
 
@@ -170,9 +172,9 @@ export default function DashboardScreen() {
       {records.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="document-text-outline" size={64} color={colors.textMuted} />
-          <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No Records Yet</Text>
+          <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>{t.dashboard.noRecords}</Text>
           <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-            Complete or lose a game to see your records here
+            {t.dashboard.noRecordsDesc}
           </Text>
         </View>
       ) : (
@@ -198,9 +200,9 @@ export default function DashboardScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <Ionicons name="trash" size={48} color={colors.error} />
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Clear All Records?</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t.dashboard.clearAllRecords}</Text>
             <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
-              This will permanently delete all your game records. This action cannot be undone.
+              {t.dashboard.clearAllDesc}
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
@@ -208,14 +210,14 @@ export default function DashboardScreen() {
                 onPress={() => setShowClearModal(false)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>{t.dashboard.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalConfirmBtn, { backgroundColor: colors.error }]}
                 onPress={handleClear}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.modalConfirmText, { color: colors.white }]}>Clear All</Text>
+                <Text style={[styles.modalConfirmText, { color: colors.white }]}>{t.dashboard.clearAll}</Text>
               </TouchableOpacity>
             </View>
           </View>

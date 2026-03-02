@@ -8,6 +8,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useGame } from "../context/GameContext";
 import { useColors } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 import { SHADOWS } from "../constants/theme";
 import {
   TOTAL_LEVELS,
@@ -24,24 +25,25 @@ interface ICompletionOverlay {
 const CompletionOverlay = ({ formatTime, handleNextLevel, handleBackToJourney, handleNewGame, isJourney }: ICompletionOverlay) => {
   const { state, timer } = useGame();
   const colors = useColors();
+  const { t } = useLanguage();
   return (
     <View style={[StyleSheet.absoluteFill, styles.completionOverlay]}>
       <View style={[styles.completionCard, { backgroundColor: colors.surface }]}>
         <Ionicons name="trophy" size={64} color={colors.pencilActive} />
-        <Text style={[styles.completionTitle, { color: colors.text }]}>Congratulations!</Text>
-        <Text style={[styles.completionSubtitle, { color: colors.textSecondary }]}>You solved the puzzle!</Text>
+        <Text style={[styles.completionTitle, { color: colors.text }]}>{t.overlay.congratulations}</Text>
+        <Text style={[styles.completionSubtitle, { color: colors.textSecondary }]}>{t.overlay.puzzleSolved}</Text>
 
         <View style={styles.completionStats}>
           <View style={styles.completionStatItem}>
             <Text style={[styles.completionStatValue, { color: colors.text }]}>
               {formatTime(timer)}
             </Text>
-            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Time</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>{t.overlay.time}</Text>
           </View>
           <View style={[styles.completionDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.completionStatItem}>
             <Text style={[styles.completionStatValue, { color: colors.text }]}>{state.mistakes}</Text>
-            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Mistakes</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>{t.overlay.mistakes}</Text>
           </View>
           <View style={[styles.completionDivider, { backgroundColor: colors.borderLight }]} />
           <View style={styles.completionStatItem}>
@@ -49,7 +51,7 @@ const CompletionOverlay = ({ formatTime, handleNextLevel, handleBackToJourney, h
               {state.difficulty.charAt(0).toUpperCase() +
                 state.difficulty.slice(1)}
             </Text>
-            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>Difficulty</Text>
+            <Text style={[styles.completionStatLabel, { color: colors.textMuted }]}>{t.overlay.difficulty}</Text>
           </View>
         </View>
 
@@ -65,8 +67,8 @@ const CompletionOverlay = ({ formatTime, handleNextLevel, handleBackToJourney, h
             >
               <Text style={[styles.newGameBtnText, { color: colors.white }]}>
                 {state.journeyLevel !== null && state.journeyLevel >= TOTAL_LEVELS
-                  ? "Journey Complete!"
-                  : "Next Level"}
+                  ? t.overlay.journeyComplete
+                  : t.overlay.nextLevel}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -74,7 +76,7 @@ const CompletionOverlay = ({ formatTime, handleNextLevel, handleBackToJourney, h
               onPress={handleBackToJourney}
               activeOpacity={0.8}
             >
-              <Text style={[styles.newGameBtnText, { color: colors.white }]}>Journey Map</Text>
+              <Text style={[styles.newGameBtnText, { color: colors.white }]}>{t.overlay.journeyMap}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -83,7 +85,7 @@ const CompletionOverlay = ({ formatTime, handleNextLevel, handleBackToJourney, h
             onPress={handleNewGame}
             activeOpacity={0.8}
           >
-            <Text style={[styles.newGameBtnText, { color: colors.white }]}>New Game</Text>
+            <Text style={[styles.newGameBtnText, { color: colors.white }]}>{t.overlay.newGame}</Text>
           </TouchableOpacity>
         )}
       </View>

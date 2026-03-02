@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import * as NavigationBar from 'expo-navigation-bar';
 import { GameProvider } from '../src/context/GameContext';
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
+import { LanguageProvider } from '../src/context/LanguageContext';
 
 function InnerLayout() {
   const { colors } = useTheme();
@@ -32,10 +33,12 @@ function InnerLayout() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <GameProvider>
-        <InnerLayout />
-      </GameProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <GameProvider>
+          <InnerLayout />
+        </GameProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }

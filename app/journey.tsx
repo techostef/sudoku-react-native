@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../src/context/GameContext';
 import { SHADOWS, DIFFICULTY_COLORS } from '../src/constants/theme';
 import { useColors } from '../src/context/ThemeContext';
+import { useLanguage } from '../src/context/LanguageContext';
 import {
   JourneyProgress,
   JourneyLevel,
@@ -104,6 +105,7 @@ export default function JourneyScreen() {
   const [randomDifficulty, setRandomDifficulty] = useState<Difficulty>('easy');
   const { startGame } = useGame();
   const colors = useColors();
+  const { t } = useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -166,7 +168,7 @@ export default function JourneyScreen() {
         >
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.text }]}>Journey</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t.journey.title}</Text>
         <TouchableOpacity
           style={styles.resetBtn}
           onPress={() => setShowResetModal(true)}
@@ -181,17 +183,17 @@ export default function JourneyScreen() {
         <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="flag" size={18} color={colors.primary} />
           <Text style={[styles.summaryValue, { color: colors.text }]}>{completedCount}/{TOTAL_LEVELS}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Levels</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>{t.journey.levels}</Text>
         </View>
         <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="star" size={18} color="#FBBF24" />
           <Text style={[styles.summaryValue, { color: colors.text }]}>{totalStars}/{maxStars}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Stars</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>{t.journey.stars}</Text>
         </View>
         <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="trophy" size={18} color={colors.success} />
           <Text style={[styles.summaryValue, { color: colors.text }]}>{getDifficultyLabel(completedCount + 1)}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Rank</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>{t.journey.rank}</Text>
         </View>
       </View>
 
@@ -282,15 +284,15 @@ export default function JourneyScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <View style={[styles.levelBadge, { backgroundColor: getZoneColor(selectedLevel?.level ?? 1) }]}>
-              <Text style={styles.levelBadgeText}>Level {selectedLevel?.level}</Text>
+              <Text style={styles.levelBadgeText}>Level {selectedLevel?.level ?? ''}</Text>
             </View>
 
             <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
-              {getDifficultyLabel(selectedLevel?.level ?? 1)} Zone
+              {getDifficultyLabel(selectedLevel?.level ?? 1)} {t.journey.zone}
             </Text>
 
             <View style={[styles.difficultyPreview, { backgroundColor: colors.surfaceAlt }]}>
-              <Text style={[styles.difficultyPreviewLabel, { color: colors.textSecondary }]}>Difficulty</Text>
+              <Text style={[styles.difficultyPreviewLabel, { color: colors.textSecondary }]}>{t.journey.difficulty}</Text>
               <View style={[styles.difficultyPill, { backgroundColor: DIFFICULTY_COLORS[randomDifficulty] }]}>
                 <Text style={styles.difficultyPillText}>
                   {randomDifficulty.charAt(0).toUpperCase() + randomDifficulty.slice(1)}
@@ -299,7 +301,7 @@ export default function JourneyScreen() {
             </View>
 
             <Text style={[styles.modalHint, { color: colors.textMuted }]}>
-              Difficulty is randomly assigned based on your level progression
+              {t.journey.difficultyHint}
             </Text>
 
             <TouchableOpacity
@@ -308,7 +310,7 @@ export default function JourneyScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="dice" size={18} color={colors.primary} />
-              <Text style={[styles.rerollText, { color: colors.primary }]}>Re-roll Difficulty</Text>
+              <Text style={[styles.rerollText, { color: colors.primary }]}>{t.journey.rerollDifficulty}</Text>
             </TouchableOpacity>
 
             <View style={styles.modalActions}>
@@ -317,7 +319,7 @@ export default function JourneyScreen() {
                 onPress={() => setSelectedLevel(null)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>{t.journey.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalPlayBtn, { backgroundColor: getZoneColor(selectedLevel?.level ?? 1) }]}
@@ -325,7 +327,7 @@ export default function JourneyScreen() {
                 activeOpacity={0.7}
               >
                 <Ionicons name="play" size={18} color={colors.white} />
-                <Text style={[styles.modalPlayText, { color: colors.white }]}>Play</Text>
+                <Text style={[styles.modalPlayText, { color: colors.white }]}>{t.journey.play}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -342,9 +344,9 @@ export default function JourneyScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
             <Ionicons name="warning" size={48} color={colors.error} />
-            <Text style={[styles.resetTitle, { color: colors.text }]}>Reset Journey?</Text>
+            <Text style={[styles.resetTitle, { color: colors.text }]}>{t.journey.resetJourney}</Text>
             <Text style={[styles.resetDesc, { color: colors.textSecondary }]}>
-              This will reset all your journey progress. All unlocked levels and stars will be lost.
+              {t.journey.resetDesc}
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
@@ -352,14 +354,14 @@ export default function JourneyScreen() {
                 onPress={() => setShowResetModal(false)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
+                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>{t.journey.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalResetConfirmBtn, { backgroundColor: colors.error }]}
                 onPress={handleReset}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.modalPlayText, { color: colors.white }]}>Reset</Text>
+                <Text style={[styles.modalPlayText, { color: colors.white }]}>{t.journey.reset}</Text>
               </TouchableOpacity>
             </View>
           </View>
