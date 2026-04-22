@@ -45,6 +45,8 @@ const useGameScreen = () => {
     isComplete,
     isPaused,
     isGameOver,
+    hintsUsed,
+    maxHints,
   } = state;
 
   const router = useRouter();
@@ -96,6 +98,8 @@ const useGameScreen = () => {
     isComplete,
     isGameOver,
     isPaused,
+    hintsUsed,
+    maxHints,
 
     // State gamescreen
     showRestartModal,
@@ -123,6 +127,8 @@ export default function GameScreen() {
     journeyLevel,
     boxSize,
     isPaused,
+    hintsUsed,
+    maxHints,
 
     showRestartModal,
     handleRestart,
@@ -184,6 +190,15 @@ export default function GameScreen() {
               }}
             >
               {mistakes}/3
+            </Text>
+          </Text>
+        </View>
+        <View style={styles.statItem}>
+          <Ionicons name="bulb-outline" size={16} color={colors.primary} />
+          <Text style={[styles.statText, { color: colors.textSecondary }]}>
+            {t.game.hint}:{" "}
+            <Text style={{ color: colors.text, fontWeight: "700" }}>
+              {maxHints - hintsUsed}/{maxHints}
             </Text>
           </Text>
         </View>

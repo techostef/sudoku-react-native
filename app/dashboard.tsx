@@ -15,7 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SHADOWS, DIFFICULTY_COLORS } from '../src/constants/theme';
 import { useColors } from '../src/context/ThemeContext';
 import { useLanguage } from '../src/context/LanguageContext';
-import { GameRecord, loadRecords, clearRecords } from '../src/utils/storage';
+import { GameRecord, loadRecords, clearRecords, getBestTimesByDifficulty, getWinStreak } from '../src/utils/storage';
+import { Difficulty } from '../src/utils/sudoku';
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -61,6 +62,15 @@ export default function DashboardScreen() {
     records.filter((r) => r.completed).length > 0
       ? Math.min(...records.filter((r) => r.completed).map((r) => r.time))
       : null;
+  const streak = getWinStreak(records);
+  const bestByDiff = getBestTimesByDifficulty(records);
+  const DIFF_KEYS: { key: Difficulty; label: string }[] = [
+    { key: 'easy', label: 'Easy' },
+    { key: 'moderate', label: 'Mod' },
+    { key: 'hard', label: 'Hard' },
+    { key: 'expert', label: 'Expert' },
+    { key: 'extreme', label: 'Extreme' },
+  ];
 
   const renderRecord = ({ item, index }: { item: GameRecord; index: number }) => {
     const diffColor = DIFFICULTY_COLORS[item.difficulty] || colors.primary;
@@ -166,7 +176,30 @@ export default function DashboardScreen() {
           </Text>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>{t.dashboard.best}</Text>
         </View>
+        <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+          <Ionicons name="flame" size={20} color="#F59E0B" />
+          <Text style={[styles.statValue, { color: colors.text }]}>{streak}</Text>
+          <Text style={[styles.statLabel, { color: colors.textMuted }]}>{t.dashboard.streak}</Text>
+        </View>
       </View>
+
+      {/* Best Times by Difficulty */}
+      {records.some((r) => r.completed) && (
+        <View style={[styles.bestTimesSection, isWide && styles.statsRowWide]}>
+          <Text style={[styles.bestTimesTitle, { color: colors.textSecondary }]}>{t.dashboard.bestTimes}</Text>
+          <View style={[styles.bestTimesRow, { backgroundColor: colors.surface }]}>
+            {DIFF_KEYS.map(({ key, label }) => (
+              <View key={key} style={styles.bestTimeCell}>
+                <View style={[styles.diffDot, { backgroundColor: DIFFICULTY_COLORS[key] }]} />
+                <Text style={[styles.bestTimeDiff, { color: colors.textMuted }]}>{label}</Text>
+                <Text style={[styles.bestTimeValue, { color: bestByDiff[key] !== null ? colors.text : colors.textMuted }]}>
+                  {bestByDiff[key] !== null ? formatTime(bestByDiff[key]!) : '--:--'}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* Records List */}
       {records.length === 0 ? (
@@ -371,6 +404,42 @@ const styles = StyleSheet.create({
   },
   diffPillText: {
     fontSize: 11,
+    fontWeight: '700',
+  },
+  bestTimesSection: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  bestTimesTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  bestTimesRow: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    ...SHADOWS.small,
+  },
+  bestTimeCell: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 3,
+  },
+  diffDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  bestTimeDiff: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  bestTimeValue: {
+    fontSize: 12,
     fontWeight: '700',
   },
   // Modal

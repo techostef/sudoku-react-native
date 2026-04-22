@@ -13,6 +13,7 @@ export interface Translations {
     records: string;
     theme: string;
     language: string;
+    settings: string;
     chooseLanguage: string;
     done: string;
     chooseTheme: string;
@@ -34,6 +35,8 @@ export interface Translations {
     restartPuzzle: string;
     restartDesc: string;
     cancel: string;
+    hint: string;
+    hintsLeft: string;
   };
   // Dashboard
   dashboard: {
@@ -42,6 +45,8 @@ export interface Translations {
     won: string;
     lost: string;
     best: string;
+    streak: string;
+    bestTimes: string;
     noRecords: string;
     noRecordsDesc: string;
     clearAllRecords: string;
@@ -54,6 +59,16 @@ export interface Translations {
     mistakes: string;
     resultWon: string;
     resultLost: string;
+  };
+  // Settings
+  settings: {
+    title: string;
+    sound: string;
+    soundDesc: string;
+    highlightRelated: string;
+    highlightRelatedDesc: string;
+    showRemaining: string;
+    showRemainingDesc: string;
   };
   // Journey
   journey: {
@@ -103,6 +118,7 @@ const en: Translations = {
     records: 'Records',
     theme: 'Theme',
     language: 'Language',
+    settings: 'Settings',
     chooseLanguage: 'Choose Language',
     done: 'Done',
     chooseTheme: 'Choose Theme',
@@ -123,6 +139,8 @@ const en: Translations = {
     restartPuzzle: 'Restart Puzzle?',
     restartDesc: 'This will clear all your progress and reset the timer.',
     cancel: 'Cancel',
+    hint: 'Hint',
+    hintsLeft: 'left',
   },
   dashboard: {
     title: 'Records',
@@ -130,6 +148,8 @@ const en: Translations = {
     won: 'Won',
     lost: 'Lost',
     best: 'Best',
+    streak: 'Streak',
+    bestTimes: 'Best Times by Difficulty',
     noRecords: 'No Records Yet',
     noRecordsDesc: 'Complete or lose a game to see your records here',
     clearAllRecords: 'Clear All Records?',
@@ -157,6 +177,15 @@ const en: Translations = {
     difficultyHint: 'Difficulty is randomly assigned based on your level progression',
     rerollDifficulty: 'Re-roll Difficulty',
     play: 'Play',
+  },
+  settings: {
+    title: 'Settings',
+    sound: 'Sound Effects',
+    soundDesc: 'Play sounds during gameplay',
+    highlightRelated: 'Highlight Related Cells',
+    highlightRelatedDesc: 'Highlight cells in the same row, column, and box',
+    showRemaining: 'Show Number Count',
+    showRemainingDesc: 'Show how many times each number can still be placed',
   },
   overlay: {
     congratulations: 'Congratulations!',
@@ -189,6 +218,7 @@ const id: Translations = {
     records: 'Rekaman',
     theme: 'Tema',
     language: 'Bahasa',
+    settings: 'Pengaturan',
     chooseLanguage: 'Pilih Bahasa',
     done: 'Selesai',
     chooseTheme: 'Pilih Tema',
@@ -209,6 +239,8 @@ const id: Translations = {
     restartPuzzle: 'Ulangi Teka-teki?',
     restartDesc: 'Ini akan menghapus semua kemajuanmu dan mengatur ulang timer.',
     cancel: 'Batal',
+    hint: 'Petunjuk',
+    hintsLeft: 'tersisa',
   },
   dashboard: {
     title: 'Rekaman',
@@ -216,6 +248,8 @@ const id: Translations = {
     won: 'Menang',
     lost: 'Kalah',
     best: 'Terbaik',
+    streak: 'Rentetan',
+    bestTimes: 'Waktu Terbaik per Kesulitan',
     noRecords: 'Belum Ada Rekaman',
     noRecordsDesc: 'Selesaikan atau kalah dalam permainan untuk melihat rekamanmu di sini',
     clearAllRecords: 'Hapus Semua Rekaman?',
@@ -243,6 +277,15 @@ const id: Translations = {
     difficultyHint: 'Kesulitan ditetapkan secara acak berdasarkan perkembangan levelmu',
     rerollDifficulty: 'Acak Kesulitan',
     play: 'Main',
+  },
+  settings: {
+    title: 'Pengaturan',
+    sound: 'Efek Suara',
+    soundDesc: 'Mainkan suara saat bermain',
+    highlightRelated: 'Sorot Sel Terkait',
+    highlightRelatedDesc: 'Sorot sel di baris, kolom, dan kotak yang sama',
+    showRemaining: 'Tampilkan Hitungan Angka',
+    showRemainingDesc: 'Tampilkan berapa kali setiap angka masih bisa ditempatkan',
   },
   overlay: {
     congratulations: 'Selamat!',

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useGame, CellData } from '../context/GameContext';
 import { useColors } from '../context/ThemeContext';
+import { useSettings } from '../context/SettingsContext';
 import { ThemeColors } from '../constants/theme';
 import { getValueCell } from '../utils/sudoku';
 
@@ -148,6 +149,7 @@ const Cell = React.memo(function Cell({
 export default function Board() {
   const { state, selectCell } = useGame();
   const colors = useColors();
+  const { settings } = useSettings();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { grid, boxSize, selectedCell } = state;
   const gridSize = boxSize * boxSize;
@@ -197,6 +199,7 @@ export default function Board() {
               selectedCell[1] === cIdx;
 
             const isRelated =
+              settings.highlightRelated &&
               selectedCell !== null &&
               !isSelected &&
               (selectedCell[0] === rIdx ||

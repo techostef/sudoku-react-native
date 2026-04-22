@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BoxSize, Difficulty } from './sudoku';
 
+const DIFFICULTIES: Difficulty[] = ['easy', 'moderate', 'hard', 'expert', 'extreme'];
+
 export interface GameRecord {
   id: string;
   date: string;
@@ -9,6 +11,7 @@ export interface GameRecord {
   time: number;
   mistakes: number;
   completed: boolean;
+  hintsUsed?: number;
 }
 
 const RECORDS_KEY = 'sudoku_game_records';
@@ -43,4 +46,22 @@ export async function clearRecords(): Promise<void> {
   } catch {
     // silently fail
   }
+}
+
+export function getBestTimesByDifficulty(records: GameRecord[]): Record<Difficulty, number | null> {
+  const result = {} as Record<Difficulty, number | null>;
+  for (const diff of DIFFICULTIES) {
+    const wins = records.filter((r) => r.completed && r.difficulty === diff);
+    result[diff] = wins.length > 0 ? Math.min(...wins.map((r) => r.time)) : null;
+  }
+  return result;
+}
+
+export function getWinStreak(records: GameRecord[]): number {
+  let streak = 0;
+  for (const record of records) {
+    if (record.completed) streak++;
+    else break;
+  }
+  return streak;
 }

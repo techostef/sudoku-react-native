@@ -11,6 +11,7 @@ import { BoxSize, Difficulty, generatePuzzle, getValidCandidates, isValidPlaceme
 import { saveRecord, GameRecord } from '../utils/storage';
 import { completeJourneyLevel } from '../utils/journey';
 import { loadSounds, playSound } from '../utils/sound';
+import { useSettings } from './SettingsContext';
 
 export interface CellData {
   value: number;
@@ -39,6 +40,8 @@ export interface GameState {
   isGameOver: boolean;
   mistakes: number;
   maxMistakes: number;
+  hintsUsed: number;
+  maxHints: number;
   history: HistoryEntry[];
   gameStarted: boolean;
   journeyLevel: number | null;
@@ -53,7 +56,8 @@ type GameAction =
   | { type: 'UNDO' }
   | { type: 'RESTART' }
   | { type: 'TOGGLE_PAUSE' }
-  | { type: 'AUTO_PENCIL' };
+  | { type: 'AUTO_PENCIL' }
+  | { type: 'USE_HINT' };
 
 const initialState: GameState = {
   boxSize: 3,
@@ -67,6 +71,8 @@ const initialState: GameState = {
   isGameOver: false,
   mistakes: 0,
   maxMistakes: 3,
+  hintsUsed: 0,
+  maxHints: 3,
   history: [],
   gameStarted: false,
   journeyLevel: null,
@@ -285,7 +291,49 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isComplete: false,
         isGameOver: false,
         mistakes: 0,
+        hintsUsed: 0,
         history: [],
+      };
+    }
+
+    case 'USE_HINT': {
+      if (!state.selectedCell || state.isPaused || state.isComplete || state.isGameOver) return state;
+      if (state.hintsUsed >= state.maxHints) return state;
+      const [row, col] = state.selectedCell;
+      const cell = state.grid[row][col];
+      if (cell.isGiven || cell.isLocked) return state;
+
+      const hintValue = cell.solution;
+      const newGrid = state.grid.map((r) => r.map((c) => ({ ...c, notes: [...c.notes] })));
+      const historyEntry: HistoryEntry = { row, col, prevValue: cell.value, prevNotes: [...cell.notes] };
+
+      newGrid[row][col].value = hintValue;
+      newGrid[row][col].isLocked = true;
+      newGrid[row][col].notes = [];
+
+      const size = state.boxSize * state.boxSize;
+      const boxRowStart = Math.floor(row / state.boxSize) * state.boxSize;
+      const boxColStart = Math.floor(col / state.boxSize) * state.boxSize;
+      for (let i = 0; i < size; i++) {
+        const ri = newGrid[row][i].notes.indexOf(hintValue);
+        if (ri >= 0) newGrid[row][i].notes.splice(ri, 1);
+        const ci = newGrid[i][col].notes.indexOf(hintValue);
+        if (ci >= 0) newGrid[i][col].notes.splice(ci, 1);
+      }
+      for (let r = boxRowStart; r < boxRowStart + state.boxSize; r++) {
+        for (let c = boxColStart; c < boxColStart + state.boxSize; c++) {
+          const bi = newGrid[r][c].notes.indexOf(hintValue);
+          if (bi >= 0) newGrid[r][c].notes.splice(bi, 1);
+        }
+      }
+
+      const isComplete = checkComplete(newGrid);
+      return {
+        ...state,
+        grid: newGrid,
+        hintsUsed: state.hintsUsed + 1,
+        isComplete,
+        history: [...state.history, historyEntry],
       };
     }
 
@@ -331,6 +379,7 @@ interface GameContextType {
   restart: () => void;
   togglePause: () => void;
   autoPencil: () => void;
+  useHint: () => void;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -338,6 +387,7 @@ const GameContext = createContext<GameContextType | null>(null);
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const [tick, setTick] = useState(0);
+  const { settings } = useSettings();
 
   // Load sounds on mount
   useEffect(() => {
@@ -363,7 +413,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Don't play sounds on game over or complete (those have their own sounds)
-    if (!state.isComplete && !state.isGameOver) {
+    if (settings.soundEnabled && !state.isComplete && !state.isGameOver) {
       if (state.mistakes > prevMistakesRef.current) {
         playSound('hitWrong');
       } else if (lockedCount > prevLockedCountRef.current) {
@@ -389,14 +439,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         time: tick,
         mistakes: state.mistakes,
         completed: state.isComplete,
+        hintsUsed: state.hintsUsed,
       };
       saveRecord(record);
 
       // Play win or lose sound
-      if (state.isComplete && !prevCompleteRef.current) {
-        playSound('winGame');
-      } else if (state.isGameOver && !prevGameOverRef.current) {
-        playSound('loseGame');
+      if (settings.soundEnabled) {
+        if (state.isComplete && !prevCompleteRef.current) {
+          playSound('winGame');
+        } else if (state.isGameOver && !prevGameOverRef.current) {
+          playSound('loseGame');
+        }
       }
 
       // Complete journey level if in journey mode and won
@@ -453,6 +506,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'AUTO_PENCIL' });
   }, []);
 
+  const useHint = useCallback(() => {
+    dispatch({ type: 'USE_HINT' });
+  }, []);
+
   return (
     <GameContext.Provider
       value={{
@@ -468,6 +525,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         restart,
         togglePause,
         autoPencil,
+        useHint,
       }}
     >
       {children}

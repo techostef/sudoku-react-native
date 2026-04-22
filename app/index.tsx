@@ -206,6 +206,15 @@ export default function StartMenu() {
           <Text style={[styles.themeBtnText, { color: colors.text }]}>{t.home.language}</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.themeBtn, isWide && styles.startBtnWide, { backgroundColor: colors.surfaceAlt, borderColor: colors.borderLight, marginTop: 12 }]}
+          onPress={() => router.push('/settings')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="settings-outline" size={22} color={colors.text} />
+          <Text style={[styles.themeBtnText, { color: colors.text }]}>{t.home.settings}</Text>
+        </TouchableOpacity>
+
         <View style={{ height: insets.bottom + 110 }} />
 
         {/* Theme Picker Modal */}

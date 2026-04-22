@@ -6,6 +6,7 @@ import * as NavigationBar from 'expo-navigation-bar';
 import { GameProvider } from '../src/context/GameContext';
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 import { LanguageProvider } from '../src/context/LanguageContext';
+import { SettingsProvider } from '../src/context/SettingsContext';
 
 function InnerLayout() {
   const { colors } = useTheme();
@@ -35,9 +36,11 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
       <ThemeProvider>
-        <GameProvider>
-          <InnerLayout />
-        </GameProvider>
+        <SettingsProvider>
+          <GameProvider>
+            <InnerLayout />
+          </GameProvider>
+        </SettingsProvider>
       </ThemeProvider>
     </LanguageProvider>
   );

@@ -10,18 +10,29 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useGame } from '../context/GameContext';
 import { useColors } from '../context/ThemeContext';
+import { useSettings } from '../context/SettingsContext';
 import { getValueCell } from '../utils/sudoku';
 
 const maxButton3x3 = 9
 const maxButton4x4 = 16
 
 const NumberPad = () => {
-  const { state, inputNumber, togglePencil, erase, undo, autoPencil } = useGame();
+  const { state, inputNumber, togglePencil, erase, undo, autoPencil, useHint } = useGame();
   const colors = useColors();
+  const { settings } = useSettings();
   const { width: windowWidth } = useWindowDimensions();
   const gridSize = state.boxSize * state.boxSize;
 
-  const { grid, selectedCell } = state;
+  const { grid, selectedCell, hintsUsed, maxHints } = state;
+  const hintsRemaining = maxHints - hintsUsed;
+
+  const isHintDisabled = useMemo(() => {
+    if (!selectedCell) return true;
+    if (hintsRemaining <= 0) return true;
+    const [r, c] = selectedCell;
+    if (!grid[r] || !grid[r][c]) return true;
+    return grid[r][c].isGiven || grid[r][c].isLocked;
+  }, [selectedCell, hintsRemaining, grid]);
 
   const maxPadWidth = Platform.OS === 'web'
     ? Math.min(windowWidth - 10, 560)
@@ -95,7 +106,7 @@ const NumberPad = () => {
                   >
                     {num}
                   </Text>
-                  {remaining > 0 && gridSize <= 16 && (
+                  {settings.showRemainingCount && remaining > 0 && gridSize <= 16 && (
                     <Text style={[styles.remainingText, { fontSize: btnSize * 0.2, color: colors.textMuted }]}>
                       {remaining}
                     </Text>
@@ -143,7 +154,7 @@ const NumberPad = () => {
                   >
                     {num}
                   </Text>
-                  {remaining > 0 && gridSize <= 16 && (
+                  {settings.showRemainingCount && remaining > 0 && gridSize <= 16 && (
                     <Text style={[styles.remainingText, { fontSize: btnSize * 0.2, color: colors.textMuted }]}>
                       {remaining}
                     </Text>
@@ -203,6 +214,22 @@ const NumberPad = () => {
           <Ionicons name="color-wand" size={22} color={colors.text} />
           <Text style={[styles.toolLabel, { color: colors.textSecondary }]}>Auto</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.toolBtn,
+            { backgroundColor: colors.surface, borderColor: colors.borderLight },
+            isHintDisabled && { opacity: 0.4 },
+          ]}
+          onPress={useHint}
+          disabled={isHintDisabled}
+          activeOpacity={0.6}
+        >
+          <Ionicons name="bulb-outline" size={22} color={isHintDisabled ? colors.textMuted : colors.primary} />
+          <Text style={[styles.toolLabel, { color: isHintDisabled ? colors.textMuted : colors.primary }]}>
+            {hintsRemaining}/3
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -251,7 +278,7 @@ const styles = StyleSheet.create({
   toolRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 16,
+    gap: 4,
     marginTop: 16,
   },
   toolBtn: {
@@ -261,7 +288,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 1.5,
-    minWidth: 72,
+    minWidth: 60,
   },
   toolLabel: {
     fontSize: 11,
