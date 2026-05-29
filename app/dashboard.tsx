@@ -15,8 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SHADOWS, DIFFICULTY_COLORS } from '../src/constants/theme';
 import { useColors } from '../src/context/ThemeContext';
 import { useLanguage } from '../src/context/LanguageContext';
-import { GameRecord, loadRecords, clearRecords, getBestTimesByDifficulty, getWinStreak } from '../src/utils/storage';
+import { GameRecord, loadRecords, clearRecords, getBestTimesByDifficulty, getWinStreak, loadBlitzBestScores, BlitzBestScores, GameMode } from '../src/utils/storage';
 import { Difficulty } from '../src/utils/sudoku';
+
+type DashboardFilter = 'all' | 'classic' | 'blitz' | 'killer';
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -35,7 +37,9 @@ function formatDate(iso: string): string {
 }
 
 export default function DashboardScreen() {
-  const [records, setRecords] = useState<GameRecord[]>([]);
+  const [allRecords, setAllRecords] = useState<GameRecord[]>([]);
+  const [blitzScores, setBlitzScores] = useState<BlitzBestScores>({ easy: 0, moderate: 0, hard: 0 });
+  const [filter, setFilter] = useState<DashboardFilter>('all');
   const [showClearModal, setShowClearModal] = useState(false);
   const colors = useColors();
   const { t } = useLanguage();
@@ -46,15 +50,23 @@ export default function DashboardScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadRecords().then(setRecords);
+      loadRecords().then(setAllRecords);
+      loadBlitzBestScores().then(setBlitzScores);
     }, [])
   );
 
   const handleClear = async () => {
     await clearRecords();
-    setRecords([]);
+    setAllRecords([]);
+    setBlitzScores({ easy: 0, moderate: 0, hard: 0 });
     setShowClearModal(false);
   };
+
+  const recordMode = (r: GameRecord): GameMode => r.mode ?? 'classic';
+  const records =
+    filter === 'all' || filter === 'blitz'
+      ? allRecords
+      : allRecords.filter((r) => recordMode(r) === filter);
 
   const wins = records.filter((r) => r.completed).length;
   const losses = records.filter((r) => !r.completed).length;
@@ -64,6 +76,13 @@ export default function DashboardScreen() {
       : null;
   const streak = getWinStreak(records);
   const bestByDiff = getBestTimesByDifficulty(records);
+
+  const FILTER_TABS: { key: DashboardFilter; label: string }[] = [
+    { key: 'all', label: t.dashboard.filterAll },
+    { key: 'classic', label: t.dashboard.filterClassic },
+    { key: 'blitz', label: t.dashboard.filterBlitz },
+    { key: 'killer', label: t.dashboard.filterKiller },
+  ];
   const DIFF_KEYS: { key: Difficulty; label: string }[] = [
     { key: 'easy', label: 'Easy' },
     { key: 'moderate', label: 'Mod' },
@@ -74,6 +93,7 @@ export default function DashboardScreen() {
 
   const renderRecord = ({ item, index }: { item: GameRecord; index: number }) => {
     const diffColor = DIFFICULTY_COLORS[item.difficulty] || colors.primary;
+    const modeTag = recordMode(item) === 'killer' ? 'KILLER' : item.diagonal ? 'DIAGONAL' : null;
     return (
       <View style={[styles.recordCard, { backgroundColor: colors.surface }]}>
         <View style={styles.recordHeader}>
@@ -89,6 +109,11 @@ export default function DashboardScreen() {
                 {item.completed ? t.dashboard.resultWon : t.dashboard.resultLost}
               </Text>
             </View>
+            {modeTag && (
+              <View style={[styles.modeTag, { backgroundColor: colors.surfaceAlt, borderColor: colors.borderLight }]}>
+                <Text style={[styles.modeTagText, { color: colors.textSecondary }]}>{modeTag}</Text>
+              </View>
+            )}
           </View>
           <Text style={[styles.recordDate, { color: colors.textMuted }]}>{formatDate(item.date)}</Text>
         </View>
@@ -152,7 +177,56 @@ export default function DashboardScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Filter Tabs */}
+      <View style={[styles.filterRow, isWide && styles.headerWide]}>
+        {FILTER_TABS.map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[
+              styles.filterTab,
+              { backgroundColor: colors.surface, borderColor: colors.borderLight },
+              filter === tab.key && { backgroundColor: colors.primary, borderColor: colors.primary },
+            ]}
+            onPress={() => setFilter(tab.key)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.filterTabText,
+                { color: colors.textSecondary },
+                filter === tab.key && { color: colors.white },
+              ]}
+            >
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Blitz best-score view */}
+      {filter === 'blitz' && (
+        <View style={[styles.bestTimesSection, isWide && styles.statsRowWide]}>
+          <Text style={[styles.bestTimesTitle, { color: colors.textSecondary }]}>
+            {t.dashboard.blitzBestScores}
+          </Text>
+          <View style={[styles.bestTimesRow, { backgroundColor: colors.surface }]}>
+            {(['easy', 'moderate', 'hard'] as const).map((d) => (
+              <View key={d} style={styles.bestTimeCell}>
+                <View style={[styles.diffDot, { backgroundColor: DIFFICULTY_COLORS[d] }]} />
+                <Text style={[styles.bestTimeDiff, { color: colors.textMuted }]}>
+                  {t.home[d].toUpperCase()}
+                </Text>
+                <Text style={[styles.bestTimeValue, { color: colors.text, fontSize: 18 }]}>
+                  {blitzScores[d]}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
       {/* Summary Stats */}
+      {filter !== 'blitz' && (
       <View style={[styles.statsRow, isWide && styles.statsRowWide]}>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Ionicons name="game-controller" size={20} color={colors.primary} />
@@ -182,9 +256,10 @@ export default function DashboardScreen() {
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>{t.dashboard.streak}</Text>
         </View>
       </View>
+      )}
 
       {/* Best Times by Difficulty */}
-      {records.some((r) => r.completed) && (
+      {filter !== 'blitz' && records.some((r) => r.completed) && (
         <View style={[styles.bestTimesSection, isWide && styles.statsRowWide]}>
           <Text style={[styles.bestTimesTitle, { color: colors.textSecondary }]}>{t.dashboard.bestTimes}</Text>
           <View style={[styles.bestTimesRow, { backgroundColor: colors.surface }]}>
@@ -201,26 +276,28 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      {/* Records List */}
-      {records.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="document-text-outline" size={64} color={colors.textMuted} />
-          <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>{t.dashboard.noRecords}</Text>
-          <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-            {t.dashboard.noRecordsDesc}
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={records}
-          keyExtractor={(item) => item.id}
-          renderItem={renderRecord}
-          contentContainerStyle={[
-            styles.listContent,
-            isWide && styles.listContentWide,
-          ]}
-          showsVerticalScrollIndicator={false}
-        />
+      {/* Records List (hidden in blitz filter — Blitz shows scores only) */}
+      {filter !== 'blitz' && (
+        records.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="document-text-outline" size={64} color={colors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>{t.dashboard.noRecords}</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+              {t.dashboard.noRecordsDesc}
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={records}
+            keyExtractor={(item) => item.id}
+            renderItem={renderRecord}
+            contentContainerStyle={[
+              styles.listContent,
+              isWide && styles.listContentWide,
+            ]}
+            showsVerticalScrollIndicator={false}
+          />
+        )
       )}
 
       {/* Clear Confirmation Modal */}
@@ -285,6 +362,24 @@ const styles = StyleSheet.create({
   },
   clearBtn: {
     padding: 6,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    gap: 8,
+    marginBottom: 12,
+  },
+  filterTab: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  filterTabText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   statsRow: {
     flexDirection: 'row',
@@ -371,6 +466,17 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  modeTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  modeTagText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   recordDate: {
     fontSize: 12,

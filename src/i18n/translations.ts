@@ -27,6 +27,30 @@ export interface Translations {
     expertDesc: string;
     extreme: string;
     extremeDesc: string;
+    tabClassic: string;
+    tabBlitz: string;
+    tabKiller: string;
+    diagonalRule: string;
+    diagonalRuleDesc: string;
+  };
+  // Blitz mode
+  blitz: {
+    title: string;
+    description: string;
+    start: string;
+    bestScore: string;
+    timeUp: string;
+    puzzlesSolved: string;
+    playAgain: string;
+    score: string;
+    penalty: string;
+  };
+  // Killer mode
+  killer: {
+    title: string;
+    description: string;
+    cageSum: string;
+    cageRule: string;
   };
   // Game screen
   game: {
@@ -59,6 +83,11 @@ export interface Translations {
     mistakes: string;
     resultWon: string;
     resultLost: string;
+    filterAll: string;
+    filterClassic: string;
+    filterBlitz: string;
+    filterKiller: string;
+    blitzBestScores: string;
   };
   // Settings
   settings: {
@@ -132,6 +161,28 @@ const en: Translations = {
     expertDesc: 'Serious puzzlers only',
     extreme: 'Extreme',
     extremeDesc: 'Ultimate challenge',
+    tabClassic: 'Classic',
+    tabBlitz: 'Blitz',
+    tabKiller: 'Killer',
+    diagonalRule: 'Diagonal Rule',
+    diagonalRuleDesc: 'Main diagonals must also contain 1–9',
+  },
+  blitz: {
+    title: 'Blitz Mode',
+    description: 'Solve as many puzzles as you can in 5 minutes',
+    start: 'Start Blitz',
+    bestScore: 'Your best',
+    timeUp: "Time's Up!",
+    puzzlesSolved: 'Puzzles Solved',
+    playAgain: 'Play Again',
+    score: 'Score',
+    penalty: '−5s',
+  },
+  killer: {
+    title: 'Killer Sudoku',
+    description: 'Sudoku with cages — digits in each cage must sum to the target',
+    cageSum: 'Cage Sum',
+    cageRule: 'No repeats within a cage',
   },
   game: {
     mistakes: 'Mistakes',
@@ -162,6 +213,11 @@ const en: Translations = {
     mistakes: 'Mistakes',
     resultWon: 'Won',
     resultLost: 'Lost',
+    filterAll: 'All',
+    filterClassic: 'Classic',
+    filterBlitz: 'Blitz',
+    filterKiller: 'Killer',
+    blitzBestScores: 'Blitz Best Scores',
   },
   journey: {
     title: 'Journey',
@@ -232,6 +288,28 @@ const id: Translations = {
     expertDesc: 'Hanya untuk puzzler serius',
     extreme: 'Ekstrem',
     extremeDesc: 'Tantangan tertinggi',
+    tabClassic: 'Klasik',
+    tabBlitz: 'Blitz',
+    tabKiller: 'Killer',
+    diagonalRule: 'Aturan Diagonal',
+    diagonalRuleDesc: 'Diagonal utama juga harus berisi 1–9',
+  },
+  blitz: {
+    title: 'Mode Blitz',
+    description: 'Selesaikan sebanyak mungkin teka-teki dalam 5 menit',
+    start: 'Mulai Blitz',
+    bestScore: 'Terbaikmu',
+    timeUp: 'Waktu Habis!',
+    puzzlesSolved: 'Teka-teki Terselesaikan',
+    playAgain: 'Main Lagi',
+    score: 'Skor',
+    penalty: '−5d',
+  },
+  killer: {
+    title: 'Killer Sudoku',
+    description: 'Sudoku dengan kandang — angka di setiap kandang harus berjumlah target',
+    cageSum: 'Jumlah Kandang',
+    cageRule: 'Tidak ada angka berulang dalam satu kandang',
   },
   game: {
     mistakes: 'Kesalahan',
@@ -262,6 +340,11 @@ const id: Translations = {
     mistakes: 'Kesalahan',
     resultWon: 'Menang',
     resultLost: 'Kalah',
+    filterAll: 'Semua',
+    filterClassic: 'Klasik',
+    filterBlitz: 'Blitz',
+    filterKiller: 'Killer',
+    blitzBestScores: 'Skor Terbaik Blitz',
   },
   journey: {
     title: 'Perjalanan',

@@ -11,7 +11,8 @@ import { useGame, CellData } from '../context/GameContext';
 import { useColors } from '../context/ThemeContext';
 import { useSettings } from '../context/SettingsContext';
 import { ThemeColors } from '../constants/theme';
-import { getValueCell } from '../utils/sudoku';
+import { getValueCell, isOnMainDiagonal, isOnAntiDiagonal } from '../utils/sudoku';
+import { getCageEdges, getCageAnchor, getCageForCell } from '../utils/killerSudoku';
 
 const Cell = React.memo(function Cell({
   fontSize,
@@ -29,6 +30,10 @@ const Cell = React.memo(function Cell({
   isError,
   onPress,
   colors,
+  cageEdges,
+  cageColor,
+  isCageAnchor,
+  cageSum,
 }: {
   fontSize: number;
   noteSize: number;
@@ -45,6 +50,10 @@ const Cell = React.memo(function Cell({
   isError: boolean;
   onPress: () => void;
   colors: ThemeColors;
+  cageEdges?: { top: boolean; right: boolean; bottom: boolean; left: boolean } | null;
+  cageColor?: string;
+  isCageAnchor?: boolean;
+  cageSum?: number | null;
 }) {
   const gridSize = boxSize * boxSize;
   const isLeftBoxBorder = col % boxSize === 0 && col % boxSize !== 0;
@@ -79,6 +88,38 @@ const Cell = React.memo(function Cell({
         isError && { backgroundColor: colors.errorBg },
       ]}
     >
+      {cageEdges && cageColor && (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 3,
+            left: 3,
+            right: 3,
+            bottom: 3,
+            borderColor: cageColor,
+            borderStyle: 'dashed',
+            borderTopWidth: cageEdges.top ? 1 : 0,
+            borderRightWidth: cageEdges.right ? 1 : 0,
+            borderBottomWidth: cageEdges.bottom ? 1 : 0,
+            borderLeftWidth: cageEdges.left ? 1 : 0,
+          }}
+        />
+      )}
+      {isCageAnchor && cageSum !== null && cageSum !== undefined && (
+        <Text
+          style={{
+            position: 'absolute',
+            top: 1,
+            left: 3,
+            fontSize: Math.max(9, cellSize * 0.22),
+            fontWeight: '700',
+            color: colors.textSecondary,
+          }}
+        >
+          {cageSum}
+        </Text>
+      )}
       {cell.value !== 0 ? (
         <Text
           style={[
@@ -151,7 +192,7 @@ export default function Board() {
   const colors = useColors();
   const { settings } = useSettings();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const { grid, boxSize, selectedCell } = state;
+  const { grid, boxSize, selectedCell, diagonal, cages, mode } = state;
   const gridSize = boxSize * boxSize;
 
   const maxBoardSize = Platform.OS === 'web'
@@ -179,6 +220,9 @@ export default function Board() {
 
   if (grid.length === 0) return null;
 
+  const showCages = mode === 'killer' && cages.length > 0;
+  const cageColor = colors.boxBorder;
+
   return (
     <View
       style={[
@@ -198,6 +242,14 @@ export default function Board() {
               selectedCell[0] === rIdx &&
               selectedCell[1] === cIdx;
 
+            const isOnSelectedDiag =
+              diagonal &&
+              selectedCell !== null &&
+              (
+                (isOnMainDiagonal(selectedCell[0], selectedCell[1]) && isOnMainDiagonal(rIdx, cIdx)) ||
+                (isOnAntiDiagonal(selectedCell[0], selectedCell[1], gridSize) && isOnAntiDiagonal(rIdx, cIdx, gridSize))
+              );
+
             const isRelated =
               settings.highlightRelated &&
               selectedCell !== null &&
@@ -207,7 +259,8 @@ export default function Board() {
                 (Math.floor(selectedCell[0] / boxSize) ===
                   Math.floor(rIdx / boxSize) &&
                   Math.floor(selectedCell[1] / boxSize) ===
-                    Math.floor(cIdx / boxSize)));
+                    Math.floor(cIdx / boxSize)) ||
+                isOnSelectedDiag);
 
             const isSameValue =
               !isSelected &&
@@ -218,6 +271,12 @@ export default function Board() {
               !cell.isGiven &&
               cell.value !== 0 &&
               cell.value !== cell.solution;
+
+            const cage = showCages ? getCageForCell(rIdx, cIdx, cages) : null;
+            const cageEdges = cage ? getCageEdges(rIdx, cIdx, cage) : null;
+            const cageAnchor = cage ? getCageAnchor(cage) : null;
+            const isCageAnchor =
+              cageAnchor !== null && cageAnchor[0] === rIdx && cageAnchor[1] === cIdx;
 
             return (
               <Cell
@@ -237,11 +296,46 @@ export default function Board() {
                 isError={isError}
                 onPress={useCallback(() => handlePressCell(rIdx, cIdx), [handlePressCell, rIdx, cIdx])}
                 colors={colors}
+                cageEdges={cageEdges}
+                cageColor={cageColor}
+                isCageAnchor={isCageAnchor}
+                cageSum={isCageAnchor && cage ? cage.sum : null}
               />
             );
           })}
         </View>
       ))}
+
+      {diagonal && (
+        <>
+          <View
+            pointerEvents="none"
+            style={[
+              staticStyles.diagonalLine,
+              {
+                width: boardSize * Math.SQRT2,
+                top: boardSize / 2,
+                left: -boardSize * (Math.SQRT2 - 1) / 2,
+                transform: [{ rotate: '45deg' }],
+                backgroundColor: colors.primary,
+              },
+            ]}
+          />
+          <View
+            pointerEvents="none"
+            style={[
+              staticStyles.diagonalLine,
+              {
+                width: boardSize * Math.SQRT2,
+                top: boardSize / 2,
+                left: -boardSize * (Math.SQRT2 - 1) / 2,
+                transform: [{ rotate: '-45deg' }],
+                backgroundColor: colors.primary,
+              },
+            ]}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -252,6 +346,11 @@ const staticStyles = StyleSheet.create({
     borderRadius: 4,
     overflow: 'hidden',
     alignSelf: 'center',
+  },
+  diagonalLine: {
+    position: 'absolute',
+    height: 1.5,
+    opacity: 0.35,
   },
   row: {
     flexDirection: 'row',

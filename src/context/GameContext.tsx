@@ -8,10 +8,15 @@ import React, {
   useState,
 } from 'react';
 import { BoxSize, Difficulty, generatePuzzle, getValidCandidates, isValidPlacement } from '../utils/sudoku';
-import { saveRecord, GameRecord } from '../utils/storage';
+import { saveRecord, GameRecord, GameMode } from '../utils/storage';
 import { completeJourneyLevel } from '../utils/journey';
 import { loadSounds, playSound } from '../utils/sound';
 import { useSettings } from './SettingsContext';
+import {
+  Cage,
+  generateKillerPuzzle,
+  isValidKillerCagePlacement,
+} from '../utils/killerSudoku';
 
 export interface CellData {
   value: number;
@@ -45,10 +50,24 @@ export interface GameState {
   history: HistoryEntry[];
   gameStarted: boolean;
   journeyLevel: number | null;
+  mode: GameMode;
+  diagonal: boolean;
+  cages: Cage[];
+  // Blitz-mode flags: when true, the engine skips mistake-counting/game-over
+  // and lets the screen orchestrate scoring + regeneration.
+  isBlitz: boolean;
+  blitzScore: number;
+}
+
+export interface StartGameOptions {
+  journeyLevel?: number;
+  mode?: GameMode;
+  diagonal?: boolean;
+  isBlitz?: boolean;
 }
 
 type GameAction =
-  | { type: 'START_GAME'; boxSize: BoxSize; difficulty: Difficulty; journeyLevel?: number }
+  | { type: 'START_GAME'; boxSize: BoxSize; difficulty: Difficulty; options?: StartGameOptions }
   | { type: 'SELECT_CELL'; row: number; col: number }
   | { type: 'INPUT_NUMBER'; num: number }
   | { type: 'TOGGLE_PENCIL' }
@@ -57,7 +76,9 @@ type GameAction =
   | { type: 'RESTART' }
   | { type: 'TOGGLE_PAUSE' }
   | { type: 'AUTO_PENCIL' }
-  | { type: 'USE_HINT' };
+  | { type: 'USE_HINT' }
+  | { type: 'REGENERATE_BLITZ' }
+  | { type: 'INC_BLITZ_SCORE' };
 
 const initialState: GameState = {
   boxSize: 3,
@@ -76,7 +97,34 @@ const initialState: GameState = {
   history: [],
   gameStarted: false,
   journeyLevel: null,
+  mode: 'classic',
+  diagonal: false,
+  cages: [],
+  isBlitz: false,
+  blitzScore: 0,
 };
+
+function buildGridFromPuzzle(
+  puzzle: number[][],
+  solution: number[][],
+  boxSize: number
+): CellData[][] {
+  const size = boxSize * boxSize;
+  const grid: CellData[][] = [];
+  for (let r = 0; r < size; r++) {
+    grid[r] = [];
+    for (let c = 0; c < size; c++) {
+      grid[r][c] = {
+        value: puzzle[r][c],
+        solution: solution[r][c],
+        isGiven: puzzle[r][c] !== 0,
+        isLocked: false,
+        notes: [],
+      };
+    }
+  }
+  return grid;
+}
 
 function checkComplete(grid: CellData[][]): boolean {
   for (const row of grid) {
@@ -90,24 +138,25 @@ function checkComplete(grid: CellData[][]): boolean {
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START_GAME': {
-      const { puzzle, solution } = generatePuzzle(
-        action.boxSize,
-        action.difficulty
-      );
-      const size = action.boxSize * action.boxSize;
-      const grid: CellData[][] = [];
-      for (let r = 0; r < size; r++) {
-        grid[r] = [];
-        for (let c = 0; c < size; c++) {
-          grid[r][c] = {
-            value: puzzle[r][c],
-            solution: solution[r][c],
-            isGiven: puzzle[r][c] !== 0,
-            isLocked: false,
-            notes: [],
-          };
-        }
+      const opts = action.options ?? {};
+      const mode = opts.mode ?? 'classic';
+      const diagonal = opts.diagonal ?? false;
+      const isBlitz = opts.isBlitz ?? false;
+
+      let puzzle: number[][];
+      let solution: number[][];
+      let cages: Cage[] = [];
+      if (mode === 'killer') {
+        const k = generateKillerPuzzle(action.difficulty);
+        puzzle = k.puzzle;
+        solution = k.solution;
+        cages = k.cages;
+      } else {
+        const p = generatePuzzle(action.boxSize, action.difficulty, diagonal);
+        puzzle = p.puzzle;
+        solution = p.solution;
       }
+      const grid = buildGridFromPuzzle(puzzle, solution, action.boxSize);
       return {
         ...initialState,
         boxSize: action.boxSize,
@@ -115,8 +164,35 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         grid,
         solution,
         gameStarted: true,
-        journeyLevel: action.journeyLevel ?? null,
+        journeyLevel: opts.journeyLevel ?? null,
+        mode,
+        diagonal,
+        cages,
+        isBlitz,
+        blitzScore: 0,
       };
+    }
+
+    case 'REGENERATE_BLITZ': {
+      // Used by Blitz mode to load a fresh puzzle after a completion without
+      // wiping score or timer.
+      const { puzzle, solution } = generatePuzzle(state.boxSize, state.difficulty, state.diagonal);
+      const grid = buildGridFromPuzzle(puzzle, solution, state.boxSize);
+      return {
+        ...state,
+        grid,
+        solution,
+        selectedCell: null,
+        pencilMode: false,
+        isComplete: false,
+        isGameOver: false,
+        history: [],
+        hintsUsed: 0,
+      };
+    }
+
+    case 'INC_BLITZ_SCORE': {
+      return { ...state, blitzScore: state.blitzScore + 1 };
     }
 
     case 'SELECT_CELL': {
@@ -144,7 +220,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.pencilMode) {
         // Validate pencil: only allow valid candidates
         const valuesGrid = state.grid.map((r) => r.map((c) => c.value));
-        if (!isValidPlacement(valuesGrid, row, col, action.num, state.boxSize)) {
+        const baseValid = isValidPlacement(valuesGrid, row, col, action.num, state.boxSize, state.diagonal);
+        const cageValid =
+          state.mode !== 'killer' ||
+          isValidKillerCagePlacement(valuesGrid, row, col, action.num, state.cages);
+        if (!baseValid || !cageValid) {
           // Already toggling off is always allowed
           const noteIdx = newGrid[row][col].notes.indexOf(action.num);
           if (noteIdx >= 0) {
@@ -205,7 +285,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
-      const isGameOver = newMistakes >= state.maxMistakes;
+      // Blitz mode never triggers game over from mistakes — the screen applies time penalties.
+      const isGameOver = state.isBlitz ? false : newMistakes >= state.maxMistakes;
       const isComplete = !isGameOver && checkComplete(newGrid);
 
       return {
@@ -343,7 +424,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const newGrid = state.grid.map((r, rIdx) =>
         r.map((c, cIdx) => {
           if (c.value !== 0 || c.isGiven || c.isLocked) return { ...c, notes: [...c.notes] };
-          const candidates = getValidCandidates(valuesGrid, rIdx, cIdx, state.boxSize);
+          let candidates = getValidCandidates(valuesGrid, rIdx, cIdx, state.boxSize, state.diagonal);
+          if (state.mode === 'killer') {
+            candidates = candidates.filter((n) =>
+              isValidKillerCagePlacement(valuesGrid, rIdx, cIdx, n, state.cages)
+            );
+          }
           return { ...c, notes: candidates };
         })
       );
@@ -370,7 +456,7 @@ interface GameContextType {
   state: GameState;
   timer: number;
   setTimer: (timer: number) => void;
-  startGame: (boxSize: BoxSize, difficulty: Difficulty, journeyLevel?: number) => void;
+  startGame: (boxSize: BoxSize, difficulty: Difficulty, journeyLevelOrOptions?: number | StartGameOptions) => void;
   selectCell: (row: number, col: number) => void;
   inputNumber: (num: number) => void;
   togglePencil: () => void;
@@ -380,6 +466,8 @@ interface GameContextType {
   togglePause: () => void;
   autoPencil: () => void;
   useHint: () => void;
+  regenerateBlitzPuzzle: () => void;
+  incBlitzScore: () => void;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -431,17 +519,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if ((state.isComplete && !prevCompleteRef.current) ||
         (state.isGameOver && !prevGameOverRef.current)) {
-      const record: GameRecord = {
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-        boxSize: state.boxSize,
-        difficulty: state.difficulty,
-        time: tick,
-        mistakes: state.mistakes,
-        completed: state.isComplete,
-        hintsUsed: state.hintsUsed,
-      };
-      saveRecord(record);
+      // Blitz mode saves its score via the screen, not as a per-puzzle record.
+      if (!state.isBlitz) {
+        const record: GameRecord = {
+          id: Date.now().toString(),
+          date: new Date().toISOString(),
+          boxSize: state.boxSize,
+          difficulty: state.difficulty,
+          time: tick,
+          mistakes: state.mistakes,
+          completed: state.isComplete,
+          hintsUsed: state.hintsUsed,
+          mode: state.mode,
+          diagonal: state.diagonal || undefined,
+        };
+        saveRecord(record);
+      }
 
       // Play win or lose sound
       if (settings.soundEnabled) {
@@ -462,12 +555,24 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [state.isComplete, state.isGameOver]);
 
   const startGame = useCallback(
-    (boxSize: BoxSize, difficulty: Difficulty, journeyLevel?: number) => {
+    (boxSize: BoxSize, difficulty: Difficulty, journeyLevelOrOptions?: number | StartGameOptions) => {
       setTick(0);
-      dispatch({ type: 'START_GAME', boxSize, difficulty, journeyLevel });
+      const options: StartGameOptions =
+        typeof journeyLevelOrOptions === 'number'
+          ? { journeyLevel: journeyLevelOrOptions }
+          : journeyLevelOrOptions ?? {};
+      dispatch({ type: 'START_GAME', boxSize, difficulty, options });
     },
     []
   );
+
+  const regenerateBlitzPuzzle = useCallback(() => {
+    dispatch({ type: 'REGENERATE_BLITZ' });
+  }, []);
+
+  const incBlitzScore = useCallback(() => {
+    dispatch({ type: 'INC_BLITZ_SCORE' });
+  }, []);
 
   const setTimer = useCallback((timer: number) => {
     setTick(timer);
@@ -526,6 +631,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         togglePause,
         autoPencil,
         useHint,
+        regenerateBlitzPuzzle,
+        incBlitzScore,
       }}
     >
       {children}

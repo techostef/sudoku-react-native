@@ -100,11 +100,28 @@ function getCellsToRemove(boxSize: BoxSize, difficulty: Difficulty): number {
 
 export function generatePuzzle(
   boxSize: BoxSize,
-  difficulty: Difficulty
+  difficulty: Difficulty,
+  diagonal: boolean = false
 ): { puzzle: number[][]; solution: number[][] } {
-  const base = generateBaseGrid(boxSize);
-  const solution = shuffleGrid(base, boxSize);
   const size = boxSize * boxSize;
+  let solution: number[][] = [];
+
+  // For diagonal mode we generate solutions until both diagonals are valid.
+  // shuffleGrid randomizes enough that this normally succeeds within a few tries.
+  const maxAttempts = diagonal ? 200 : 1;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const base = generateBaseGrid(boxSize);
+    const candidate = shuffleGrid(base, boxSize);
+    if (!diagonal || diagonalsAreValid(candidate, size)) {
+      solution = candidate;
+      break;
+    }
+  }
+  if (solution.length === 0) {
+    // Fallback — extremely unlikely; just use any shuffled grid
+    solution = shuffleGrid(generateBaseGrid(boxSize), boxSize);
+  }
+
   const puzzle = solution.map((r) => [...r]);
 
   const toRemove = getCellsToRemove(boxSize, difficulty);
@@ -123,17 +140,36 @@ export function generatePuzzle(
   return { puzzle, solution };
 }
 
+function diagonalsAreValid(grid: number[][], size: number): boolean {
+  const main = new Set<number>();
+  const anti = new Set<number>();
+  for (let i = 0; i < size; i++) {
+    main.add(grid[i][i]);
+    anti.add(grid[i][size - 1 - i]);
+  }
+  return main.size === size && anti.size === size;
+}
+
+export function isOnMainDiagonal(row: number, col: number): boolean {
+  return row === col;
+}
+
+export function isOnAntiDiagonal(row: number, col: number, size: number): boolean {
+  return row + col === size - 1;
+}
+
 export function getValidCandidates(
   grid: number[][],
   row: number,
   col: number,
-  boxSize: number
+  boxSize: number,
+  diagonal: boolean = false
 ): number[] {
   const size = boxSize * boxSize;
   const candidates: number[] = [];
   for (let num = 1; num <= size; num++) {
     const v = getValueCell(num)
-    if (isValidPlacement(grid, row, col, v as any, boxSize)) {
+    if (isValidPlacement(grid, row, col, v as any, boxSize, diagonal)) {
       candidates.push(v as any);
     }
   }
@@ -145,7 +181,8 @@ export function isValidPlacement(
   row: number,
   col: number,
   num: number,
-  boxSize: number
+  boxSize: number,
+  diagonal: boolean = false
 ): boolean {
   const size = boxSize * boxSize;
 
@@ -165,6 +202,21 @@ export function isValidPlacement(
   for (let r = boxRow; r < boxRow + boxSize; r++) {
     for (let c = boxCol; c < boxCol + boxSize; c++) {
       if (r !== row && c !== col && grid[r][c] === num) return false;
+    }
+  }
+
+  // Check diagonals when enabled
+  if (diagonal) {
+    if (isOnMainDiagonal(row, col)) {
+      for (let i = 0; i < size; i++) {
+        if (i !== row && grid[i][i] === num) return false;
+      }
+    }
+    if (isOnAntiDiagonal(row, col, size)) {
+      for (let i = 0; i < size; i++) {
+        const c = size - 1 - i;
+        if (i !== row && grid[i][c] === num) return false;
+      }
     }
   }
 
